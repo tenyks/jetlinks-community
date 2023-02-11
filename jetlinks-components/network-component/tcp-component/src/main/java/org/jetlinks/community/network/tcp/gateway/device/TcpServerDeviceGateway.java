@@ -112,7 +112,6 @@ class TcpServerDeviceGateway extends AbstractDeviceGateway implements DeviceGate
                         .getSession(session.getDeviceId())
                         .subscribe();
                 }
-
             });
             monitor.connected();
 
@@ -138,8 +137,7 @@ class TcpServerDeviceGateway extends AbstractDeviceGateway implements DeviceGate
             return getProtocol()
                 .flatMap(protocol -> protocol.onClientConnect(getTransport(), client, this))
                 .then(
-                    client
-                        .subscribe()
+                    client.subscribe()
                         .filter(tcp -> started.get())
                         .flatMap(this::handleTcpMessage)
                         .onErrorResume((err) -> {
@@ -154,6 +152,7 @@ class TcpServerDeviceGateway extends AbstractDeviceGateway implements DeviceGate
 
         Mono<Void> handleTcpMessage(TcpMessage message) {
             long time = System.nanoTime();
+            // ProtocolSupport -> MessageCodec >> MessageCodec.decode(message) -> DeviceMessage
             return getProtocol()
                 .flatMap(pt -> pt.getMessageCodec(getTransport()))
                 .flatMapMany(codec -> codec.decode(FromDeviceMessageContext.of(sessionRef.get(), message, registry)))
@@ -222,8 +221,7 @@ class TcpServerDeviceGateway extends AbstractDeviceGateway implements DeviceGate
         disposable = tcpServer
             .handleConnection()
             .publishOn(Schedulers.parallel())
-            .flatMap(client -> new TcpConnection(client)
-                         .accept()
+            .flatMap(client -> new TcpConnection(client).accept()
                          .onErrorResume(err -> {
                              log.error("handle tcp client[{}] error", client.getRemoteAddress(), err);
                              return Mono.empty();
@@ -231,8 +229,7 @@ class TcpServerDeviceGateway extends AbstractDeviceGateway implements DeviceGate
                 , Integer.MAX_VALUE)
             .contextWrite(ReactiveLogger.start("network", tcpServer.getId()))
             .subscribe(
-                ignore -> {
-                },
+                ignore -> {},
                 error -> log.error(error.getMessage(), error)
             );
     }

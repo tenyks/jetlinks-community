@@ -67,7 +67,7 @@ public class TcpServerDeviceGatewayProvider implements DeviceGatewayProvider {
     public Mono<DeviceGateway> createDeviceGateway(DeviceGatewayProperties properties) {
         return networkManager
             .<TcpServer>getNetwork(getNetworkType(), properties.getChannelId())
-            .map(mqttServer -> {
+            .map(tcpServer -> {
                 String protocol = properties.getProtocol();
 
                 Assert.hasText(protocol, "protocol can not be empty");
@@ -78,7 +78,7 @@ public class TcpServerDeviceGatewayProvider implements DeviceGatewayProvider {
                     registry,
                     messageHandler,
                     sessionManager,
-                    mqttServer
+                    tcpServer
                 );
             });
     }
