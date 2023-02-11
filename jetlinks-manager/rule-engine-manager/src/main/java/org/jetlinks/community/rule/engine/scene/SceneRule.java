@@ -66,9 +66,9 @@ public class SceneRule implements Serializable {
     private Trigger trigger;
 
     /**
-     * @see org.jetlinks.pro.rule.engine.scene.term.TermColumn
-     * @see org.jetlinks.pro.reactorql.term.TermType
-     * @see org.jetlinks.pro.rule.engine.scene.value.TermValue
+     * @see org.jetlinks.community.rule.engine.scene.term.TermColumn
+     * @see org.jetlinks.community.reactorql.term.TermType
+     * @see org.jetlinks.community.rule.engine.scene.value.TermValue
      */
     @Schema(description = "触发条件")
     private List<Term> terms;
@@ -250,7 +250,7 @@ public class SceneRule implements Serializable {
                         //多个并行执行动作
                         String[] nodeIds = new String[size];
                         for (int i = 0; i < nodeIds.length; i++) {
-                            nodeIds[0] = createBranchActionId(_branchIndex, thenIndex, 1 + (i + 1));
+                            nodeIds[i] = createBranchActionId(_branchIndex, thenIndex, 1 + (i + 1));
                         }
                         Flux<String> nodeIdFlux = Flux.fromArray(nodeIds);
                         //并行
