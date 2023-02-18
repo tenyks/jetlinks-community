@@ -117,8 +117,7 @@ class TcpServerDeviceGateway extends AbstractDeviceGateway implements DeviceGate
 
             sessionRef.set(new UnknownTcpDeviceSession(client.getId(), client, getTransport(), monitor));
 
-            legalityChecker = Schedulers
-                .parallel()
+            legalityChecker = Schedulers.parallel()
                 .schedule(this::checkLegality, connectCheckTimeout.toMillis(), TimeUnit.MILLISECONDS);
         }
 

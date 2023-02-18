@@ -159,11 +159,9 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
                     //使用自定义协议来认证
                     .map(support -> support.authenticate(request, registry))
                     //没有指定自定义协议,则使用clientId对应的设备进行认证.
-                    .defaultIfEmpty(Mono.defer(() -> registry
-                        .getDevice(connection.getClientId())
-                        .flatMap(device -> device.authenticate(request))))
+                    .defaultIfEmpty(Mono.defer(() -> registry.getDevice(connection.getClientId()).flatMap(device -> device.authenticate(request))))
                     .flatMap(Function.identity())
-                    //如果认证结果返回空,说明协议没有设置认证,或者认证返回不对,默认返回BAD_USER_NAME_OR_PASSWORD,防止由于协议编写不当导致mqtt任意访问的安全问题.
+                    //如果认证结果返回空,说明协议没有设置认证,或者认证返回不对, 默认返回BAD_USER_NAME_OR_PASSWORD,防止由于协议编写不当导致mqtt任意访问的安全问题.
                     .switchIfEmpty(Mono.fromRunnable(() -> connection.reject(MqttConnectReturnCode.CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD)));
             })
             .flatMap(resp -> {
@@ -177,8 +175,7 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
                     .switchIfEmpty(Mono.fromRunnable(() -> connection.reject(MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED)))
                     ;
             })
-            .as(MonoTracer
-                    .create(SpanName.auth(connection.getClientId()),
+            .as(MonoTracer.create(SpanName.auth(connection.getClientId()),
                             (span, tp3) -> {
                                 AuthenticationResponse response = tp3.getT2();
                                 if (!response.isSuccess()) {
@@ -193,7 +190,7 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
                                 span.setAttribute(SpanKey.address, connection.getClientAddress().toString());
                                 span.setAttribute(clientId, connection.getClientId());
                             }))
-            //设备认证错误,拒绝连接
+            //设备认证异常,拒绝连接
             .onErrorResume((err) -> Mono.fromRunnable(() -> {
                 log.error("MQTT连接认证[{}]失败", connection.getClientId(), err);
                 //监控信息
@@ -287,9 +284,7 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
                                                     DeviceOperator operator,
                                                     MqttConnectionSession session) {
         return Flux
-            .usingWhen(Mono.just(connection),
-                       MqttConnection::handleMessage,
-                       MqttConnection::close)
+            .usingWhen(Mono.just(connection), MqttConnection::handleMessage, MqttConnection::close)
             //网关暂停或者已停止时,则不处理消息
             .filter(pb -> isStarted())
             //解码收到的mqtt报文
