@@ -29,6 +29,7 @@
         <reactor.excel.version>1.0.4</reactor.excel.version>
         <reactor.ql.version>1.0.15</reactor.ql.version>
         <californium.version>3.7.0</californium.version>
+        <leshan-server-cf.version>1.4.2</leshan-server-cf.version>
         <fastjson.version>1.2.83</fastjson.version>
         <reactor.version>2020.0.22</reactor.version>
         <vertx.version>4.3.3</vertx.version>
@@ -297,6 +298,12 @@
                 <groupId>org.eclipse.californium</groupId>
                 <artifactId>scandium</artifactId>
                 <version>${californium.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.leshan</groupId>
+                <artifactId>leshan-server-cf</artifactId>
+                <version>${leshan-server-cf.version}</version>
             </dependency>
 
             <dependency>
