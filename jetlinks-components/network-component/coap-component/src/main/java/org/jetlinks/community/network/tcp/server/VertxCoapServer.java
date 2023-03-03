@@ -11,7 +11,7 @@ import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkType;
 import org.jetlinks.community.network.tcp.client.CoapClient;
 import org.jetlinks.community.network.tcp.client.VertxCoapClient;
-import org.jetlinks.community.network.tcp.parser.PayloadParser;
+import org.jetlinks.community.network.parser.PayloadParser;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 

@@ -1,7 +1,7 @@
 package org.jetlinks.community.network.tcp.client;
 
 import org.jetlinks.community.network.tcp.CoapMessage;
-import org.jetlinks.community.network.tcp.parser.PayloadParser;
+import org.jetlinks.community.network.parser.PayloadParser;
 import org.jetlinks.core.server.ClientConnection;
 import org.jetlinks.community.network.Network;
 import reactor.core.publisher.Flux;

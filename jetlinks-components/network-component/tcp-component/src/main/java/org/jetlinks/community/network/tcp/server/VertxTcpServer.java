@@ -6,12 +6,12 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.jetlinks.community.network.parser.PayloadParser;
 import org.jetlinks.core.utils.Reactors;
 import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkType;
 import org.jetlinks.community.network.tcp.client.TcpClient;
 import org.jetlinks.community.network.tcp.client.VertxTcpClient;
-import org.jetlinks.community.network.tcp.parser.PayloadParser;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 

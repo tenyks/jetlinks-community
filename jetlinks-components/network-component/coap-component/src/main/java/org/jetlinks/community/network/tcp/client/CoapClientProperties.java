@@ -2,7 +2,7 @@ package org.jetlinks.community.network.tcp.client;
 
 import io.vertx.core.net.NetClientOptions;
 import lombok.*;
-import org.jetlinks.community.network.tcp.parser.PayloadParserType;
+import org.jetlinks.community.network.parser.PayloadParserType;
 import org.jetlinks.community.ValueObject;
 
 import java.util.HashMap;

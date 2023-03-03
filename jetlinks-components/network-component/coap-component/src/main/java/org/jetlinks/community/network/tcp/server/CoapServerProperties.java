@@ -5,7 +5,7 @@ import lombok.*;
 import org.jetlinks.community.ValueObject;
 import org.jetlinks.community.network.AbstractServerNetworkConfig;
 import org.jetlinks.community.network.resource.NetworkTransport;
-import org.jetlinks.community.network.tcp.parser.PayloadParserType;
+import org.jetlinks.community.network.parser.PayloadParserType;
 import org.jetlinks.rule.engine.executor.PayloadType;
 
 import java.util.HashMap;

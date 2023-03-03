@@ -15,8 +15,8 @@ import org.jetlinks.core.metadata.types.ObjectType;
 import org.jetlinks.core.metadata.types.StringType;
 import org.jetlinks.community.network.security.CertificateManager;
 import org.jetlinks.community.network.security.VertxKeyCertTrustOptions;
-import org.jetlinks.community.network.tcp.parser.PayloadParser;
-import org.jetlinks.community.network.tcp.parser.PayloadParserBuilder;
+import org.jetlinks.community.network.parser.PayloadParser;
+import org.jetlinks.community.network.parser.PayloadParserBuilder;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 

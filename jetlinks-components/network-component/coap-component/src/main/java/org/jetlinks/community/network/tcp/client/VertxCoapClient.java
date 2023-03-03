@@ -11,7 +11,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
 import org.jetlinks.community.network.tcp.CoapMessage;
-import org.jetlinks.community.network.tcp.parser.PayloadParser;
+import org.jetlinks.community.network.parser.PayloadParser;
 import org.jetlinks.core.message.codec.EncodedMessage;
 import org.jetlinks.core.utils.Reactors;
 import org.jetlinks.community.network.DefaultNetworkType;
