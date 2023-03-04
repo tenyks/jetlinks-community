@@ -12,7 +12,6 @@
     </parent>
     <artifactId>network-manager</artifactId>
 
-
     <dependencies>
 
         <dependency>
@@ -30,13 +29,11 @@
         <dependency>
             <groupId>org.jetlinks</groupId>
             <artifactId>jetlinks-supports</artifactId>
-            <version>${jetlinks.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.jetlinks</groupId>
             <artifactId>jetlinks-core</artifactId>
-            <version>${jetlinks.version}</version>
         </dependency>
 
         <dependency>

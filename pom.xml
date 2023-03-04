@@ -22,7 +22,7 @@
         <hsweb.framework.version>4.0.15</hsweb.framework.version>
         <easyorm.version>4.1.0</easyorm.version>
         <hsweb.expands.version>3.0.2</hsweb.expands.version>
-        <jetlinks.version>1.2.0</jetlinks.version>
+        <jetlinks.version>1.2.1</jetlinks.version>
         <r2dbc.version>Borca-SR2</r2dbc.version>
         <netty.version>4.1.82.Final</netty.version>
         <elasticsearch.version>7.17.5</elasticsearch.version>
@@ -394,6 +394,11 @@
                 <version>${jetlinks.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.jetlinks</groupId>
+                <artifactId>jetlinks-core</artifactId>
+                <version>${jetlinks.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.google.guava</groupId>

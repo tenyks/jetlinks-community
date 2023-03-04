@@ -58,7 +58,6 @@
         <dependency>
             <groupId>org.jetlinks</groupId>
             <artifactId>jetlinks-core</artifactId>
-            <version>${jetlinks.version}</version>
         </dependency>
 
         <dependency>
