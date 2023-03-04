@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.tcp.gateway.device;
+package org.jetlinks.community.network.coap.gateway.device;
 
 import org.jetlinks.core.ProtocolSupports;
 import org.jetlinks.core.device.DeviceRegistry;
@@ -11,7 +11,7 @@ import org.jetlinks.community.gateway.supports.DeviceGatewayProvider;
 import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkManager;
 import org.jetlinks.community.network.NetworkType;
-import org.jetlinks.community.network.tcp.server.CoapServer;
+import org.jetlinks.community.network.coap.server.CoapServer;
 import org.jetlinks.supports.server.DecodedClientMessageHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -52,12 +52,12 @@ public class CoapServerDeviceGatewayProvider implements DeviceGatewayProvider {
 
     @Override
     public String getId() {
-        return "tcp-server-gateway";
+        return "coap-server-gateway";
     }
 
     @Override
     public String getName() {
-        return "TCP 透传接入";
+        return "Coap透传接入";
     }
 
     public NetworkType getNetworkType() {

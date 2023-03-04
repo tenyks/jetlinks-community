@@ -28,7 +28,6 @@ public class ChildDeviceGatewayProvider implements DeviceGatewayProvider {
         return "child-device";
     }
 
-
     public Transport getTransport() {
         return Transport.of("Gateway");
     }

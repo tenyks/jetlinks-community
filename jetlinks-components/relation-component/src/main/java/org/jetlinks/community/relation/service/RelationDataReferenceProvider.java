@@ -21,7 +21,6 @@ public class RelationDataReferenceProvider implements DataReferenceProvider {
         this.reletedRepository = reletedRepository;
     }
 
-
     @Override
     public String getId() {
         return DataReferenceManager.TYPE_RELATION;

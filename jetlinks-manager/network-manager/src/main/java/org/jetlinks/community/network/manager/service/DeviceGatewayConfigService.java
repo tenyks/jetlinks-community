@@ -14,7 +14,6 @@ import reactor.core.publisher.Mono;
 @Service
 public class DeviceGatewayConfigService implements DeviceGatewayPropertiesManager, DataReferenceProvider {
 
-
     private final DeviceGatewayService deviceGatewayService;
 
     @Override
@@ -30,7 +29,7 @@ public class DeviceGatewayConfigService implements DeviceGatewayPropertiesManage
             .and(DeviceGatewayEntity::getChannel, DeviceGatewayProvider.CHANNEL_NETWORK)
             .is(DeviceGatewayEntity::getChannelId, networkId)
             .fetch()
-            .map(e -> DataReferenceInfo.of(e.getId(),DataReferenceManager.TYPE_NETWORK, e.getChannelId(), e.getName()));
+            .map(e -> DataReferenceInfo.of(e.getId(), DataReferenceManager.TYPE_NETWORK, e.getChannelId(), e.getName()));
     }
 
     @Override
@@ -41,7 +40,7 @@ public class DeviceGatewayConfigService implements DeviceGatewayPropertiesManage
             .and(DeviceGatewayEntity::getChannel, DeviceGatewayProvider.CHANNEL_NETWORK)
             .notNull(DeviceGatewayEntity::getChannelId)
             .fetch()
-            .map(e -> DataReferenceInfo.of(e.getId(),DataReferenceManager.TYPE_NETWORK, e.getChannelId(), e.getName()));
+            .map(e -> DataReferenceInfo.of(e.getId(), DataReferenceManager.TYPE_NETWORK, e.getChannelId(), e.getName()));
     }
 
     public DeviceGatewayConfigService(DeviceGatewayService deviceGatewayService) {

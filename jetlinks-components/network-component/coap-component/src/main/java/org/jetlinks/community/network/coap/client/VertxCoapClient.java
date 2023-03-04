@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.tcp.client;
+package org.jetlinks.community.network.coap.client;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
-import org.jetlinks.community.network.tcp.CoapMessage;
+import org.jetlinks.community.network.coap.CoapMessage;
 import org.jetlinks.community.network.parser.PayloadParser;
 import org.jetlinks.core.message.codec.EncodedMessage;
 import org.jetlinks.core.utils.Reactors;
@@ -60,6 +60,8 @@ public class VertxCoapClient implements CoapClient {
         lastKeepAliveTime = System.currentTimeMillis();
     }
 
+
+
     @Override
     public void setKeepAliveTimeout(Duration timeout) {
         keepAliveTimeoutMs = timeout.toMillis();
@@ -102,9 +104,7 @@ public class VertxCoapClient implements CoapClient {
 
     @Override
     public Flux<EncodedMessage> receiveMessage() {
-        return this
-            .subscribe()
-            .cast(EncodedMessage.class);
+        return this.subscribe().cast(EncodedMessage.class);
     }
 
     @Override

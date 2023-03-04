@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.tcp.gateway.device;
+package org.jetlinks.community.network.coap.gateway.device;
 
 import lombok.Getter;
 import org.jetlinks.community.gateway.monitor.DeviceGatewayMonitor;
@@ -6,8 +6,8 @@ import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.message.codec.EncodedMessage;
 import org.jetlinks.core.message.codec.Transport;
 import org.jetlinks.core.server.session.DeviceSession;
-import org.jetlinks.community.network.tcp.CoapMessage;
-import org.jetlinks.community.network.tcp.client.CoapClient;
+import org.jetlinks.community.network.coap.CoapMessage;
+import org.jetlinks.community.network.coap.client.CoapClient;
 import reactor.core.publisher.Mono;
 
 import java.net.InetSocketAddress;

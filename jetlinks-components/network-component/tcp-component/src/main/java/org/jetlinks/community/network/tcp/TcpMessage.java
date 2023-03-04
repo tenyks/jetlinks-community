@@ -7,10 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jetlinks.core.message.codec.EncodedMessage;
-import org.jetlinks.core.message.codec.MessagePayloadType;
-import org.jetlinks.rule.engine.executor.PayloadType;
 
-import javax.annotation.Nonnull;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -25,7 +22,6 @@ import java.nio.charset.StandardCharsets;
 public class TcpMessage implements EncodedMessage {
 
     private ByteBuf payload;
-
 
     @Override
     public String toString() {

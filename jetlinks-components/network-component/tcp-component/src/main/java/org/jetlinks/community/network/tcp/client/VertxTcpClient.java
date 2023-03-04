@@ -233,7 +233,7 @@ public class VertxTcpClient implements TcpClient {
     }
 
     @Override
-    public void onDisconnect(Runnable disconnected) {
-        disconnectListener.add(disconnected);
+    public void onDisconnect(Runnable call) {
+        disconnectListener.add(call);
     }
 }

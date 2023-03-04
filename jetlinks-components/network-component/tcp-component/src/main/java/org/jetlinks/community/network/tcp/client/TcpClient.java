@@ -1,5 +1,6 @@
 package org.jetlinks.community.network.tcp.client;
 
+import org.jetlinks.community.network.parser.PayloadParser;
 import org.jetlinks.community.network.tcp.TcpMessage;
 import org.jetlinks.core.server.ClientConnection;
 import org.jetlinks.community.network.Network;
@@ -10,7 +11,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 
 /**
- * TCP 客户端
+ * TCP链接的客户端侧
  *
  * @author zhouhao
  * @version 1.0
@@ -25,7 +26,7 @@ public interface TcpClient extends Network, ClientConnection {
     InetSocketAddress getRemoteAddress();
 
     /**
-     * 订阅TCP消息,此消息是已经处理过粘拆包的完整消息
+     * 订阅TCP消息, 此消息是已经处理过粘拆包的完整消息
      *
      * @return TCP消息
      * @see PayloadParser
@@ -40,7 +41,11 @@ public interface TcpClient extends Network, ClientConnection {
      */
     Mono<Boolean> send(TcpMessage message);
 
-    void onDisconnect(Runnable disconnected);
+    /**
+     * 通知关闭链接
+     * @param call  期望触发的调用
+     */
+    void onDisconnect(Runnable call);
 
     /**
      * 连接保活

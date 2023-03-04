@@ -1,11 +1,12 @@
-package org.jetlinks.community.network.tcp.server;
+package org.jetlinks.community.network.coap.server;
 
 import org.jetlinks.community.network.ServerNetwork;
-import org.jetlinks.community.network.tcp.client.CoapClient;
+import org.jetlinks.community.network.coap.client.CoapClient;
 import reactor.core.publisher.Flux;
 
+
 /**
- * TCP服务
+ * Coap服务
  *
  * @author tenyks
  * @version 1.0

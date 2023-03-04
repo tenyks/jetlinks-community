@@ -90,7 +90,6 @@ class TcpServerDeviceGateway extends AbstractDeviceGateway implements DeviceGate
         return DefaultNetworkType.TCP_SERVER;
     }
 
-
     class TcpConnection implements DeviceGatewayContext {
         final TcpClient client;
         final AtomicReference<DeviceSession> sessionRef = new AtomicReference<>();
@@ -211,7 +210,6 @@ class TcpServerDeviceGateway extends AbstractDeviceGateway implements DeviceGate
             return handleDeviceMessage(message).then();
         }
     }
-
 
     private void doStart() {
         if (started.getAndSet(true) || disposable != null) {

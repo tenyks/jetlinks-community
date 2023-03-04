@@ -31,6 +31,8 @@ public enum DefaultNetworkType implements NetworkType, EnumDict<String> {
     COAP_CLIENT("CoAP客户端"),
     COAP_SERVER("CoAP服务"),
 
+    LWM2M_CLIENT("LwM2M客户端"),
+    LWM2M_SERVER("LwM2M服务"),
     ;
 
     static {

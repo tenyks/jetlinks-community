@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.tcp.gateway.device;
+package org.jetlinks.community.network.coap.gateway.device;
 
 import lombok.extern.slf4j.Slf4j;
 import org.hswebframework.web.logger.ReactiveLogger;
@@ -20,9 +20,9 @@ import org.jetlinks.community.gateway.DeviceGateway;
 import org.jetlinks.community.gateway.monitor.MonitorSupportDeviceGateway;
 import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkType;
-import org.jetlinks.community.network.tcp.CoapMessage;
-import org.jetlinks.community.network.tcp.client.CoapClient;
-import org.jetlinks.community.network.tcp.server.CoapServer;
+import org.jetlinks.community.network.coap.CoapMessage;
+import org.jetlinks.community.network.coap.client.CoapClient;
+import org.jetlinks.community.network.coap.server.CoapServer;
 import org.jetlinks.community.gateway.DeviceGatewayHelper;
 import org.jetlinks.community.utils.TimeUtils;
 import org.jetlinks.supports.server.DecodedClientMessageHandler;
@@ -96,13 +96,13 @@ class CoapServerDeviceGateway extends AbstractDeviceGateway implements DeviceGat
     }
 
 
-    class TcpConnection implements DeviceGatewayContext {
+    class CoapConnection implements DeviceGatewayContext {
         final CoapClient client;
         final AtomicReference<DeviceSession> sessionRef = new AtomicReference<>();
         final InetSocketAddress address;
         Disposable legalityChecker;
 
-        TcpConnection(CoapClient client) {
+        CoapConnection(CoapClient client) {
             this.client = client;
             this.address = client.getRemoteAddress();
             monitor.totalConnection(counter.sum());
@@ -225,7 +225,7 @@ class CoapServerDeviceGateway extends AbstractDeviceGateway implements DeviceGat
         disposable = tcpServer
             .handleConnection()
             .publishOn(Schedulers.parallel())
-            .flatMap(client -> new TcpConnection(client).accept()
+            .flatMap(client -> new CoapConnection(client).accept()
                          .onErrorResume(err -> {
                              log.error("handle tcp client[{}] error", client.getRemoteAddress(), err);
                              return Mono.empty();

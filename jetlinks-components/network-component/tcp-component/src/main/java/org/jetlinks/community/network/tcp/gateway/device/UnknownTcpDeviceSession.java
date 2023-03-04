@@ -6,7 +6,6 @@ import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.message.codec.EncodedMessage;
 import org.jetlinks.core.message.codec.Transport;
 import org.jetlinks.core.server.session.DeviceSession;
-import org.jetlinks.community.gateway.monitor.DeviceGatewayMonitor;
 import org.jetlinks.community.network.tcp.TcpMessage;
 import org.jetlinks.community.network.tcp.client.TcpClient;
 import reactor.core.publisher.Mono;
@@ -15,6 +14,9 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Optional;
 
+/**
+ * 占位用途的实现，典型用途如：TCP链接已建立但还没有完成身份认证
+ */
 class UnknownTcpDeviceSession implements DeviceSession {
 
     @Getter
@@ -27,9 +29,13 @@ class UnknownTcpDeviceSession implements DeviceSession {
 
     private long lastPingTime = System.currentTimeMillis();
 
+    /**
+     * TCP链接建立的时间
+     */
     private final long connectTime = System.currentTimeMillis();
 
     private final DeviceGatewayMonitor monitor;
+
     private Duration keepAliveTimeout;
 
     UnknownTcpDeviceSession(String id, TcpClient client, Transport transport, DeviceGatewayMonitor monitor) {

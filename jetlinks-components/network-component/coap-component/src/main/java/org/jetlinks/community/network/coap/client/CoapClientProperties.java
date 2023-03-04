@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.tcp.client;
+package org.jetlinks.community.network.coap.client;
 
 import io.vertx.core.net.NetClientOptions;
 import lombok.*;

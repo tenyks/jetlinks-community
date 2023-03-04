@@ -9,6 +9,9 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ *
+ */
 public interface ValueObject {
 
     Map<String, Object> values();

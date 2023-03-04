@@ -4,7 +4,7 @@ import org.jetlinks.community.strategy.Strategy;
 import reactor.core.publisher.Flux;
 
 /**
- * 数据引用提供商,用于提供获取对应类型的引用信息
+ * 数据引用提供者,用于提供获取对应类型的引用信息
  *
  * @author zhouhao
  * @since 2.0

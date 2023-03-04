@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.tcp;
+package org.jetlinks.community.network.coap;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -7,10 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jetlinks.core.message.codec.EncodedMessage;
-import org.jetlinks.core.message.codec.MessagePayloadType;
-import org.jetlinks.rule.engine.executor.PayloadType;
 
-import javax.annotation.Nonnull;
 import java.nio.charset.StandardCharsets;
 
 /**

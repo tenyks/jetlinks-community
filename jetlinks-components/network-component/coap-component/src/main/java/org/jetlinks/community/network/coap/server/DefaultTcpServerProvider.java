@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.tcp.server;
+package org.jetlinks.community.network.coap.server;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.net.NetServer;

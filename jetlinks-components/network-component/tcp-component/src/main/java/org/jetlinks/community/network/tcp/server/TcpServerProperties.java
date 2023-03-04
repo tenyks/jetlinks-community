@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * TCP服务器配置类
+ *
  * @author bsetfeng
  * @author zhouhao
  * @since 1.0
@@ -31,7 +33,9 @@ public class TcpServerProperties extends AbstractServerNetworkConfig implements 
 
     private boolean tcpKeepAlive = false;
 
-    //服务实例数量(线程数)
+    /**
+     * 服务实例数量(线程数)
+     */
     private int instance = Runtime.getRuntime().availableProcessors();
 
     public SocketAddress createSocketAddress() {
