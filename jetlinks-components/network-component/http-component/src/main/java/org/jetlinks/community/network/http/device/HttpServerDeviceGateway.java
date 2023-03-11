@@ -6,6 +6,11 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.hswebframework.web.logger.ReactiveLogger;
+import org.jetlinks.community.gateway.AbstractDeviceGateway;
+import org.jetlinks.community.gateway.DeviceGatewayHelper;
+import org.jetlinks.community.network.http.server.HttpExchange;
+import org.jetlinks.community.network.http.server.HttpServer;
+import org.jetlinks.community.network.http.server.WebSocketExchange;
 import org.jetlinks.core.ProtocolSupport;
 import org.jetlinks.core.device.*;
 import org.jetlinks.core.device.session.DeviceSessionManager;
@@ -13,19 +18,11 @@ import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.DeviceOnlineMessage;
 import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.message.codec.FromDeviceMessageContext;
-import org.jetlinks.core.message.codec.Transport;
 import org.jetlinks.core.message.codec.http.websocket.WebSocketMessage;
 import org.jetlinks.core.route.HttpRoute;
 import org.jetlinks.core.route.WebsocketRoute;
 import org.jetlinks.core.trace.MonoTracer;
 import org.jetlinks.core.utils.TopicUtils;
-import org.jetlinks.community.gateway.AbstractDeviceGateway;
-import org.jetlinks.community.gateway.DeviceGatewayHelper;
-import org.jetlinks.community.network.DefaultNetworkType;
-import org.jetlinks.community.network.NetworkType;
-import org.jetlinks.community.network.http.server.HttpExchange;
-import org.jetlinks.community.network.http.server.HttpServer;
-import org.jetlinks.community.network.http.server.WebSocketExchange;
 import org.jetlinks.supports.server.DecodedClientMessageHandler;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -93,7 +90,6 @@ public class HttpServerDeviceGateway extends AbstractDeviceGateway {
 
 
     private Mono<Void> handleWebsocketRequest(WebSocketExchange exchange) {
-
         return protocol
             .flatMap(protocol -> protocol
                 .authenticate(WebsocketAuthenticationRequest.of(exchange), registry)
@@ -188,9 +184,7 @@ public class HttpServerDeviceGateway extends AbstractDeviceGateway {
                             .setWebsocket(exchange);
                     }
                 },
-                () -> exchange
-                    .close(HttpStatus.NOT_FOUND)
-                    .then(Mono.empty()));
+                () -> exchange.close(HttpStatus.NOT_FOUND).then(Mono.empty()));
     }
 
     private Mono<Void> handleHttpRequest(HttpExchange exchange) {
@@ -219,16 +213,16 @@ public class HttpServerDeviceGateway extends AbstractDeviceGateway {
                         .flatMap(deviceMessage -> {
                             monitor.receivedMessage();
                             return helper
-                                .handleDeviceMessage(deviceMessage,
-                                                     device -> new HttpDeviceSession(device, address),
-                                                     ignore -> {
-                                                     },
-                                                     () -> {
-                                                         log.warn("无法从HTTP消息中获取设备信息:\n{}\n\n设备消息:{}", httpMessage, deviceMessage);
-                                                         return exchange
-                                                             .error(HttpStatus.NOT_FOUND)
-                                                             .then(Mono.empty());
-                                                     });
+                                .handleDeviceMessage(
+                                    deviceMessage,
+                                    device -> new HttpDeviceSession(device, address),
+                                    ignore -> { },
+                                    () -> {
+                                        log.warn("无法从HTTP消息中获取设备信息:\n{}\n\n设备消息:{}", httpMessage, deviceMessage);
+                                        return exchange
+                                            .error(HttpStatus.NOT_FOUND)
+                                            .then(Mono.empty());
+                                    });
                         })
                         .then(Mono.defer(() -> {
                             //如果协议包里没有回复，那就响应200
@@ -321,9 +315,7 @@ public class HttpServerDeviceGateway extends AbstractDeviceGateway {
     }
 
     final Mono<Void> reload() {
-
-        return reloadHttp()
-            .then(reloadWebsocket());
+        return reloadHttp().then(reloadWebsocket());
     }
 
 

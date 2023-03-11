@@ -1,12 +1,8 @@
 package org.jetlinks.community.network.http.server.vertx;
 
-import io.vertx.core.http.HttpServerOptions;
 import lombok.*;
 import org.jetlinks.community.network.AbstractServerNetworkConfig;
 import org.jetlinks.community.network.resource.NetworkTransport;
-import org.jetlinks.community.network.AbstractServerNetworkConfig;
-import org.jetlinks.community.network.resource.NetworkTransport;
-import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.Map;

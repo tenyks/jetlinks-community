@@ -60,7 +60,7 @@ public class LocalFileProtocolSupport implements ProtocolSupport {
                 WatchKey key = watch.register(watchService, new WatchEvent.Kind[]{StandardWatchEventKinds.ENTRY_CREATE,
                                                   StandardWatchEventKinds.ENTRY_MODIFY,
                                                   StandardWatchEventKinds.ENTRY_DELETE},
-                                              SensitivityWatchEventModifier.HIGH);
+                                                SensitivityWatchEventModifier.HIGH);
 
                 disposable.add(key::cancel);
             } catch (Exception e) {

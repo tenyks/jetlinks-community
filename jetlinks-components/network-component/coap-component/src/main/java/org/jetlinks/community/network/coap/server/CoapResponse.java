@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.http.server;
+package org.jetlinks.community.network.coap.server;
 
 import io.netty.buffer.ByteBuf;
 import org.jetlinks.core.message.codec.http.Header;
@@ -6,20 +6,19 @@ import org.springframework.http.MediaType;
 import reactor.core.publisher.Mono;
 
 /**
- * HTTP响应信息
+ * COAP响应信息
  *
- * @author zhouhao
- * @since 1.0
+ * @author dumas.lee
+ * @since 2.0
  */
-public interface HttpResponse {
-
+public interface CoapResponse {
     /**
      * 设置响应状态码
      *
      * @param status 状态吗
      * @return this
      */
-    HttpResponse status(int status);
+    CoapResponse status(int status);
 
     /**
      * 设置响应类型
@@ -27,7 +26,7 @@ public interface HttpResponse {
      * @param mediaType 媒体类型
      * @return this
      */
-    HttpResponse contentType(MediaType mediaType);
+    CoapResponse contentType(MediaType mediaType);
 
     /**
      * 设置响应头
@@ -35,7 +34,7 @@ public interface HttpResponse {
      * @param header 响应头
      * @return this
      */
-    HttpResponse header(Header header);
+    CoapResponse header(Header header);
 
     /**
      * 设置响应头
@@ -44,7 +43,7 @@ public interface HttpResponse {
      * @param value  value
      * @return this
      */
-    HttpResponse header(String header, String value);
+    CoapResponse header(String header, String value);
 
     /**
      * 写出数据

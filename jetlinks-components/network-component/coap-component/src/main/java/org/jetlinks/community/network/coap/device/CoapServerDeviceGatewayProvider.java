@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.coap.gateway.device;
+package org.jetlinks.community.network.coap.device;
 
 import org.jetlinks.core.ProtocolSupports;
 import org.jetlinks.core.device.DeviceRegistry;

@@ -8,8 +8,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkType;
-import org.jetlinks.community.network.coap.client.CoapClient;
-import org.jetlinks.community.network.coap.client.VertxCoapClient;
 import org.jetlinks.community.network.parser.PayloadParser;
 import org.jetlinks.core.utils.Reactors;
 import reactor.core.publisher.Flux;
@@ -90,7 +88,7 @@ public class VertxCoapServer implements CoapServer {
             socket.close();
             return;
         }
-        VertxCoapClient client = new VertxCoapClient(id + "_" + socket.remoteAddress());
+        CaliforniumCoapClient client = new CaliforniumCoapClient(id + "_" + socket.remoteAddress());
         client.setKeepAliveTimeoutMs(keepAliveTimeout);
         try {
             socket.exceptionHandler(err -> {

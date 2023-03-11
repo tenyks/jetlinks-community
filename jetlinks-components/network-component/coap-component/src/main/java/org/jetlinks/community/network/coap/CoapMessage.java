@@ -11,9 +11,8 @@ import org.jetlinks.core.message.codec.EncodedMessage;
 import java.nio.charset.StandardCharsets;
 
 /**
- * @author bsetfeng
- * @author zhouhao
- * @since 1.0
+ * @author dumas.lee
+ * @since 2.0
  **/
 @Getter
 @Setter

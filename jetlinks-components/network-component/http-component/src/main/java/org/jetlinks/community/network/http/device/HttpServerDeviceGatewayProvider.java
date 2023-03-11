@@ -93,14 +93,12 @@ public class HttpServerDeviceGatewayProvider implements DeviceGatewayProvider {
             return gateway
                 .shutdown()
                 .then(this
-                          .createDeviceGateway(properties)
-                          .flatMap(gate -> gate.startup().thenReturn(gate)));
+                    .createDeviceGateway(properties)
+                    .flatMap(gate -> gate.startup().thenReturn(gate)));
         }
         //更新协议包
         deviceGateway.setProtocol(protocolSupports.getProtocol(properties.getProtocol()));
-        return deviceGateway
-            .reload()
-            .thenReturn(deviceGateway);
+        return deviceGateway.reload().thenReturn(deviceGateway);
     }
 
     @Getter

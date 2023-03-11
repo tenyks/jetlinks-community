@@ -1,8 +1,8 @@
-package org.jetlinks.community.network.http.server;
+package org.jetlinks.community.network.coap.server;
 
 import io.netty.buffer.Unpooled;
 import org.apache.commons.collections.CollectionUtils;
-import org.jetlinks.community.network.http.device.HttpServerExchangeMessage;
+import org.jetlinks.community.network.coap.device.CoapServerExchangeMessage;
 import org.jetlinks.core.message.codec.http.HttpExchangeMessage;
 import org.jetlinks.core.message.codec.http.HttpResponseMessage;
 import org.jetlinks.core.message.codec.http.SimpleHttpResponseMessage;
@@ -14,13 +14,12 @@ import reactor.core.publisher.Mono;
 import javax.validation.constraints.NotNull;
 
 /**
- * HTTP交换接口，支持获取请求和发送响应
+ * COAP交换接口，支持获取请求和发送响应
  *
- * @author zhouhao
- * @since 1.0
+ * @author dumas.lee
+ * @since 2.0
  */
-public interface HttpExchange {
-
+public interface CoapExchange {
     /**
      * @return 请求ID
      */
@@ -34,12 +33,12 @@ public interface HttpExchange {
     /**
      * @return 请求接口
      */
-    HttpRequest request();
+    CoapRequest request();
 
     /**
      * @return 响应接口
      */
-    HttpResponse response();
+    CoapResponse response();
 
     /**
      * @return 是否已经完成响应
@@ -74,11 +73,11 @@ public interface HttpExchange {
      */
     default Mono<Void> response(@NotNull HttpStatus status, @NotNull String body) {
         return this.response(SimpleHttpResponseMessage
-                                 .builder()
-                                 .contentType(MediaType.APPLICATION_JSON)
-                                 .status(status.value())
-                                 .body(body.getBytes())
-                                 .build());
+            .builder()
+            .contentType(MediaType.APPLICATION_JSON)
+            .status(status.value())
+            .body(body.getBytes())
+            .build());
     }
 
     /**
@@ -99,14 +98,14 @@ public interface HttpExchange {
      * @return void
      */
     default Mono<Void> response(HttpResponseMessage message) {
-        HttpResponse response = response();
+        CoapResponse response = response();
         response.status(message.getStatus());
         if (CollectionUtils.isNotEmpty(message.getHeaders())) {
             message.getHeaders().forEach(response::header);
         }
         response.contentType(message.getContentType());
         return TraceHolder
-            .writeContextTo(response, HttpResponse::header)
+            .writeContextTo(response, CoapResponse::header)
             .then(response.writeAndEnd(message.getPayload()))
             ;
     }
@@ -122,7 +121,7 @@ public interface HttpExchange {
             .zip(
                 request().getBody().defaultIfEmpty(Unpooled.EMPTY_BUFFER),
                 request().multiPart(),
-                (body, part) -> new HttpServerExchangeMessage(this, body, part)
+                (body, part) -> new CoapServerExchangeMessage(this, body, part)
             );
     }
 }

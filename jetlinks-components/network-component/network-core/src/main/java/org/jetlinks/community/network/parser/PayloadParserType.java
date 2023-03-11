@@ -27,6 +27,7 @@ public enum PayloadParserType implements EnumDict<String> {
     ;
 
     private final String text;
+
     @Override
     public String getValue() {
         return name();

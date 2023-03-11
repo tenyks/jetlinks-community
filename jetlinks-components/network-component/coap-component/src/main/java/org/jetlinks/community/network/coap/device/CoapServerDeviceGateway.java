@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.coap.gateway.device;
+package org.jetlinks.community.network.coap.device;
 
 import lombok.extern.slf4j.Slf4j;
 import org.hswebframework.web.logger.ReactiveLogger;
@@ -21,7 +21,6 @@ import org.jetlinks.community.gateway.monitor.MonitorSupportDeviceGateway;
 import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkType;
 import org.jetlinks.community.network.coap.CoapMessage;
-import org.jetlinks.community.network.coap.client.CoapClient;
 import org.jetlinks.community.network.coap.server.CoapServer;
 import org.jetlinks.community.gateway.DeviceGatewayHelper;
 import org.jetlinks.community.utils.TimeUtils;
