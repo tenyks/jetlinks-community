@@ -11,7 +11,7 @@ import org.jetlinks.community.gateway.supports.DeviceGatewayProvider;
 import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkManager;
 import org.jetlinks.community.network.NetworkType;
-import org.jetlinks.community.network.coap.server.CoapServer;
+import org.jetlinks.community.network.coap.server.coap.CoapServer;
 import org.jetlinks.supports.server.DecodedClientMessageHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;

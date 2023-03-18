@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.coap.server;
+package org.jetlinks.community.network.coap.server.coap;
 
 import io.vertx.core.net.NetServer;
 import io.vertx.core.net.NetSocket;
@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.californium.core.CoapClient;
 import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkType;
 import org.jetlinks.community.network.parser.PayloadParser;
@@ -23,7 +24,7 @@ import java.util.function.Supplier;
  * @since 1.0
  **/
 @Slf4j
-public class VertxCoapServer implements CoapServer {
+public class CaliforniumCoapServer implements CoapServer {
 
     Collection<NetServer> coapServers;
 
@@ -44,13 +45,8 @@ public class VertxCoapServer implements CoapServer {
     @Setter(AccessLevel.PACKAGE)
     private InetSocketAddress bind;
 
-    public VertxCoapServer(String id) {
+    public CaliforniumCoapServer(String id) {
         this.id = id;
-    }
-
-    @Override
-    public Flux<CoapClient> handleConnection() {
-        return sink.asFlux();
     }
 
     private void execute(Runnable runnable) {

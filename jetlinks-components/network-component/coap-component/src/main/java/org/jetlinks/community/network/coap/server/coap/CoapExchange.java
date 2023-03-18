@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.coap.server;
+package org.jetlinks.community.network.coap.server.coap;
 
 import io.netty.buffer.Unpooled;
 import org.apache.commons.collections.CollectionUtils;

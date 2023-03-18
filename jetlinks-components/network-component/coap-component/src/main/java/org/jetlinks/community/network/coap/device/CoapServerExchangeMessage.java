@@ -2,7 +2,7 @@ package org.jetlinks.community.network.coap.device;
 
 import io.netty.buffer.ByteBuf;
 import lombok.extern.slf4j.Slf4j;
-import org.jetlinks.community.network.coap.server.CoapExchange;
+import org.jetlinks.community.network.coap.server.coap.CoapExchange;
 import org.jetlinks.core.message.codec.http.Header;
 import org.jetlinks.core.message.codec.http.HttpExchangeMessage;
 import org.jetlinks.core.message.codec.http.HttpResponseMessage;

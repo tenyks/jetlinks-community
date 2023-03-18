@@ -1,7 +1,7 @@
 package org.jetlinks.community.network.coap.device;
 
 import lombok.Setter;
-import org.jetlinks.community.network.coap.server.CoapExchange;
+import org.jetlinks.community.network.coap.server.coap.CoapExchange;
 import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.message.codec.EncodedMessage;

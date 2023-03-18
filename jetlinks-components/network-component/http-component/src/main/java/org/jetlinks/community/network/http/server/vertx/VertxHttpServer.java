@@ -103,12 +103,9 @@ public class VertxHttpServer implements HttpServer {
                          .flatMapIterable(Topic::getSubscribers)
                          .doOnNext(sink -> sink.next(exchange))
                          .switchIfEmpty(Mono.fromRunnable(() -> {
-
-                             log.warn("http server no handler for:[{} {}://{}{}]", request.method(), request.scheme(), request.host(), request.path());
-                             request.response()
-                                    .setStatusCode(HttpStatus.NOT_FOUND.value())
-                                    .end();
-
+                             log.warn("http server no handler for:[{} {}://{}{}]",
+                                        request.method(), request.scheme(), request.host(), request.path());
+                             request.response().setStatusCode(HttpStatus.NOT_FOUND.value()).end();
                          }))
                          .subscribe();
 
@@ -139,7 +136,7 @@ public class VertxHttpServer implements HttpServer {
                 String pattern = Stream
                     .of(urlPattern.split("/"))
                     .map(str -> {
-                        //处理路径变量,如: /devices/{id}
+                        //处理路径变量, 如: /devices/{id}
                         if (str.startsWith("{") && str.endsWith("}")) {
                             return "*";
                         }

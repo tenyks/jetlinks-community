@@ -197,9 +197,7 @@ public class HttpServerDeviceGateway extends AbstractDeviceGateway {
                 });
         }
         return protocol
-            .flatMap(protocol -> exchange
-                .toExchangeMessage()
-                .flatMap(httpMessage -> {
+            .flatMap(protocol -> exchange.toExchangeMessage().flatMap(httpMessage -> {
                     if (log.isDebugEnabled()) {
                         log.debug("收到HTTP请求\n{}", httpMessage);
                     }

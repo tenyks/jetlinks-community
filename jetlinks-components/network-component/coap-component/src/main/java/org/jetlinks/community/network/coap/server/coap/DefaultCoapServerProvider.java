@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.coap.server;
+package org.jetlinks.community.network.coap.server.coap;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.net.NetServer;
@@ -7,16 +7,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.hswebframework.web.bean.FastBeanCopier;
 import org.hswebframework.web.i18n.LocaleUtils;
 import org.jetlinks.community.network.*;
+import org.jetlinks.community.network.parser.PayloadParser;
+import org.jetlinks.community.network.parser.PayloadParserBuilder;
+import org.jetlinks.community.network.security.CertificateManager;
+import org.jetlinks.community.network.security.VertxKeyCertTrustOptions;
 import org.jetlinks.core.metadata.ConfigMetadata;
 import org.jetlinks.core.metadata.DefaultConfigMetadata;
 import org.jetlinks.core.metadata.types.BooleanType;
 import org.jetlinks.core.metadata.types.IntType;
 import org.jetlinks.core.metadata.types.ObjectType;
 import org.jetlinks.core.metadata.types.StringType;
-import org.jetlinks.community.network.security.CertificateManager;
-import org.jetlinks.community.network.security.VertxKeyCertTrustOptions;
-import org.jetlinks.community.network.parser.PayloadParser;
-import org.jetlinks.community.network.parser.PayloadParserBuilder;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -33,7 +33,7 @@ import java.util.function.Supplier;
  */
 @Slf4j
 @Component
-public class DefaultTcpServerProvider implements NetworkProvider<CoapServerProperties> {
+public class DefaultCoapServerProvider implements NetworkProvider<CoapServerProperties> {
 
     private final CertificateManager certificateManager;
 
@@ -41,7 +41,7 @@ public class DefaultTcpServerProvider implements NetworkProvider<CoapServerPrope
 
     private final PayloadParserBuilder payloadParserBuilder;
 
-    public DefaultTcpServerProvider(CertificateManager certificateManager, Vertx vertx, PayloadParserBuilder payloadParserBuilder) {
+    public DefaultCoapServerProvider(CertificateManager certificateManager, Vertx vertx, PayloadParserBuilder payloadParserBuilder) {
         this.certificateManager = certificateManager;
         this.vertx = vertx;
         this.payloadParserBuilder = payloadParserBuilder;
@@ -57,11 +57,11 @@ public class DefaultTcpServerProvider implements NetworkProvider<CoapServerPrope
     @Override
     public Mono<Network> createNetwork(@Nonnull CoapServerProperties properties) {
 
-        VertxCoapServer tcpServer = new VertxCoapServer(properties.getId());
+        CaliforniumCoapServer tcpServer = new CaliforniumCoapServer(properties.getId());
         return initTcpServer(tcpServer, properties);
     }
 
-    private Mono<Network> initTcpServer(VertxCoapServer tcpServer, CoapServerProperties properties) {
+    private Mono<Network> initTcpServer(CaliforniumCoapServer tcpServer, CoapServerProperties properties) {
         return convert(properties)
             .map(options -> {
                 int instance = Math.max(2, properties.getInstance());
@@ -97,7 +97,7 @@ public class DefaultTcpServerProvider implements NetworkProvider<CoapServerPrope
 
     @Override
     public Mono<Network> reload(@Nonnull Network network, @Nonnull CoapServerProperties properties) {
-        VertxCoapServer tcpServer = ((VertxCoapServer) network);
+        CaliforniumCoapServer tcpServer = ((CaliforniumCoapServer) network);
         tcpServer.shutdown();
         return initTcpServer(tcpServer, properties);
     }
