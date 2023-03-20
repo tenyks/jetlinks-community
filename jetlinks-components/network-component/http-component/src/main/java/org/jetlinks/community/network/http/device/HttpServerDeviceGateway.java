@@ -88,7 +88,6 @@ public class HttpServerDeviceGateway extends AbstractDeviceGateway {
             .subscribe();
     }
 
-
     private Mono<Void> handleWebsocketRequest(WebSocketExchange exchange) {
         return protocol
             .flatMap(protocol -> protocol
@@ -203,6 +202,7 @@ public class HttpServerDeviceGateway extends AbstractDeviceGateway {
                     }
                     InetSocketAddress address = exchange.request().getClientAddress();
                     UnknownHttpDeviceSession session = new UnknownHttpDeviceSession(exchange);
+
                     //调用协议执行解码
                     return protocol
                         .getMessageCodec(DefaultTransport.HTTP)
@@ -243,7 +243,6 @@ public class HttpServerDeviceGateway extends AbstractDeviceGateway {
     }
 
     private void doReloadRoute(List<HttpRoute> routes) {
-
         Map<RouteKey, Disposable> readyToRemove = new HashMap<>(handlers);
         for (HttpRoute route : routes) {
             for (HttpMethod httpMethod : route.getMethod()) {
@@ -261,7 +260,6 @@ public class HttpServerDeviceGateway extends AbstractDeviceGateway {
         for (Disposable value : readyToRemove.values()) {
             value.dispose();
         }
-
     }
 
     private void doReloadRouteWebsocket(List<WebsocketRoute> routes) {
