@@ -2,6 +2,7 @@ package org.jetlinks.community.network.coap.device;
 
 import lombok.Getter;
 import org.jetlinks.community.gateway.monitor.DeviceGatewayMonitor;
+import org.jetlinks.community.network.coap.server.coap.CoapClient;
 import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.message.codec.EncodedMessage;
 import org.jetlinks.core.message.codec.Transport;

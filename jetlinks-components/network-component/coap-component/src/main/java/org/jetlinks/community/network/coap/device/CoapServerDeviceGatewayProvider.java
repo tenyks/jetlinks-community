@@ -93,7 +93,7 @@ public class CoapServerDeviceGatewayProvider implements DeviceGatewayProvider {
                                                              DeviceGatewayProperties properties) {
         CoapServerDeviceGateway deviceGateway = ((CoapServerDeviceGateway) gateway);
         //网络组件发生变化
-        if (!Objects.equals(deviceGateway.tcpServer.getId(), properties.getChannelId())) {
+        if (!Objects.equals(deviceGateway.coapServer.getId(), properties.getChannelId())) {
             return gateway
                 .shutdown()
                 .then(this.createDeviceGateway(properties))

@@ -2,6 +2,7 @@ package org.jetlinks.community.network.coap.device;
 
 import lombok.extern.slf4j.Slf4j;
 import org.hswebframework.web.logger.ReactiveLogger;
+import org.jetlinks.community.network.coap.server.coap.CoapClient;
 import org.jetlinks.core.ProtocolSupport;
 import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.device.DeviceProductOperator;
@@ -44,7 +45,7 @@ import java.util.concurrent.atomic.LongAdder;
 @Slf4j
 class CoapServerDeviceGateway extends AbstractDeviceGateway implements DeviceGateway, MonitorSupportDeviceGateway {
 
-    final CoapServer tcpServer;
+    final CoapServer coapServer;
 
     Mono<ProtocolSupport> protocol;
 
@@ -72,7 +73,7 @@ class CoapServerDeviceGateway extends AbstractDeviceGateway implements DeviceGat
         super(id);
         this.protocol = protocol;
         this.registry = deviceRegistry;
-        this.tcpServer = tcpServer;
+        this.coapServer = tcpServer;
         this.sessionManager = sessionManager;
         this.helper = new DeviceGatewayHelper(registry, sessionManager, clientMessageHandler);
     }
@@ -221,20 +222,20 @@ class CoapServerDeviceGateway extends AbstractDeviceGateway implements DeviceGat
         if (started.getAndSet(true) || disposable != null) {
             return;
         }
-        disposable = tcpServer
-            .handleConnection()
-            .publishOn(Schedulers.parallel())
-            .flatMap(client -> new CoapConnection(client).accept()
-                         .onErrorResume(err -> {
-                             log.error("handle tcp client[{}] error", client.getRemoteAddress(), err);
-                             return Mono.empty();
-                         })
-                , Integer.MAX_VALUE)
-            .contextWrite(ReactiveLogger.start("network", tcpServer.getId()))
-            .subscribe(
-                ignore -> {},
-                error -> log.error(error.getMessage(), error)
-            );
+//        disposable = coapServer
+//            .handleConnection()
+//            .publishOn(Schedulers.parallel())
+//            .flatMap(client -> new CoapConnection(client).accept()
+//                         .onErrorResume(err -> {
+//                             log.error("handle tcp client[{}] error", client.getRemoteAddress(), err);
+//                             return Mono.empty();
+//                         })
+//                , Integer.MAX_VALUE)
+//            .contextWrite(ReactiveLogger.start("network", coapServer.getId()))
+//            .subscribe(
+//                ignore -> {},
+//                error -> log.error(error.getMessage(), error)
+//            );
     }
 
     @Override

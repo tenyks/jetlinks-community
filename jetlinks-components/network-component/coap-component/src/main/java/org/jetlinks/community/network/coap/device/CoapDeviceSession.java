@@ -1,6 +1,8 @@
 package org.jetlinks.community.network.coap.device;
 
 import lombok.Setter;
+import org.jetlinks.community.gateway.monitor.DeviceGatewayMonitor;
+import org.jetlinks.community.network.coap.server.coap.CoapClient;
 import org.jetlinks.community.network.coap.server.coap.CoapExchange;
 import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.message.codec.DefaultTransport;
@@ -29,6 +31,7 @@ class CoapDeviceSession implements DeviceSession {
     @Setter
     private CoapExchange    exchange;
 
+
     private long lastPingTime = System.currentTimeMillis();
 
     //默认永不超时
@@ -37,6 +40,11 @@ class CoapDeviceSession implements DeviceSession {
     public CoapDeviceSession(DeviceOperator deviceOperator, InetSocketAddress address) {
         this.operator = deviceOperator;
         this.address = address;
+    }
+
+    public CoapDeviceSession(DeviceOperator deviceOperator, CoapClient client, Transport transport, DeviceGatewayMonitor monitor) {
+        this.operator = deviceOperator;
+        this.address = client.getRemoteAddress();
     }
 
     @Override
@@ -101,6 +109,10 @@ class CoapDeviceSession implements DeviceSession {
     public boolean isAlive() {
         return keepAliveTimeOutMs <= 0
             || System.currentTimeMillis() - lastPingTime < keepAliveTimeOutMs;
+    }
+
+    public void setClient(CoapClient client) {
+
     }
 
     @Override

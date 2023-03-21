@@ -11,6 +11,7 @@ import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkType;
 import org.jetlinks.community.network.parser.PayloadParser;
 import org.jetlinks.core.utils.Reactors;
+import org.springframework.http.HttpMethod;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
@@ -60,6 +61,7 @@ public class CaliforniumCoapServer implements CoapServer {
     @Override
     public InetSocketAddress getBindAddress() {
         return bind;
+        //
     }
 
     public void setParserSupplier(Supplier<PayloadParser> parserSupplier) {
@@ -84,25 +86,40 @@ public class CaliforniumCoapServer implements CoapServer {
             socket.close();
             return;
         }
-        CaliforniumCoapClient client = new CaliforniumCoapClient(id + "_" + socket.remoteAddress());
-        client.setKeepAliveTimeoutMs(keepAliveTimeout);
-        try {
-            socket.exceptionHandler(err -> {
-                log.error("tcp server client [{}] error", socket.remoteAddress(), err);
-            });
-            client.setRecordParser(parserSupplier.get());
-            client.setSocket(socket);
-            sink.emitNext(client, Reactors.emitFailureHandler());
-            log.debug("accept tcp client [{}] connection", socket.remoteAddress());
-        } catch (Exception e) {
-            log.error("create tcp server client error", e);
-            client.shutdown();
-        }
+//        CaliforniumCoapClient client = new CaliforniumCoapClient(id + "_" + socket.remoteAddress());
+//        client.setKeepAliveTimeoutMs(keepAliveTimeout);
+//        try {
+//            socket.exceptionHandler(err -> {
+//                log.error("tcp server client [{}] error", socket.remoteAddress(), err);
+//            });
+//            client.setRecordParser(parserSupplier.get());
+//            client.setSocket(socket);
+//            sink.emitNext(client, Reactors.emitFailureHandler());
+//            log.debug("accept tcp client [{}] connection", socket.remoteAddress());
+//        } catch (Exception e) {
+//            log.error("create tcp server client error", e);
+//            client.shutdown();
+//        }
     }
 
     @Override
     public NetworkType getType() {
         return DefaultNetworkType.TCP_SERVER;
+    }
+
+    @Override
+    public Flux<CoapExchange> handleRequest() {
+        return null;
+    }
+
+    @Override
+    public Flux<CoapExchange> handleRequest(String method, String... urlPattern) {
+        return null;
+    }
+
+    @Override
+    public Flux<CoapExchange> handleRequest(HttpMethod method, String... urlPattern) {
+        return CoapServer.super.handleRequest(method, urlPattern);
     }
 
     @Override
