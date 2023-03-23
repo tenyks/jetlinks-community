@@ -61,7 +61,6 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
 
     static AttributeKey<String> password = AttributeKey.stringKey("password");
 
-
     //设备注册中心
     private final DeviceRegistry registry;
 
@@ -129,8 +128,7 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
                              log.error(err.getMessage(), err);
                              return Mono.empty();
                          })
-                         .as(MonoTracer
-                                 .create(SpanName.connection(connection.getClientId()),
+                         .as(MonoTracer.create(SpanName.connection(connection.getClientId()),
                                          builder -> {
                                              builder.setAttribute(clientId, connection.getClientId());
                                              builder.setAttribute(SpanKey.address, connection.getClientAddress().toString());
@@ -205,8 +203,7 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
     private Mono<Tuple3<MqttConnection, DeviceOperator, MqttConnectionSession>> handleAuthResponse(DeviceOperator device,
                                                                                                    AuthenticationResponse resp,
                                                                                                    MqttConnection connection) {
-        return Mono
-            .defer(() -> {
+        return Mono.defer(() -> {
                 String deviceId = device.getDeviceId();
                 //认证通过
                 if (resp.isSuccess()) {
@@ -275,8 +272,7 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
                 monitor.rejected();
                 //发生错误时应答 SERVER_UNAVAILABLE
                 connection.reject(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
-            }))
-            ;
+            }));
     }
 
     //处理已经建立连接的MQTT连接
