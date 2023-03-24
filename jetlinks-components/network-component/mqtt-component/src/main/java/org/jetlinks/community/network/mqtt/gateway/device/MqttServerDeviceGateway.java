@@ -258,7 +258,8 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
                             monitor.totalConnection(counter.sum());
                         })
                         //会话empty说明注册会话失败?
-                        .switchIfEmpty(Mono.fromRunnable(() -> connection.reject(MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED)));
+                        .switchIfEmpty(Mono.fromRunnable(() -> connection.reject(MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED)))
+                        ;
                 } else {
                     //认证失败返回 0x04 BAD_USER_NAME_OR_PASSWORD
                     connection.reject(MqttConnectReturnCode.CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD);
