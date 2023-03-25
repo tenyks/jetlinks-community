@@ -44,15 +44,13 @@ import java.util.concurrent.atomic.LongAdder;
  * @version 2.0
  */
 @Slf4j
-class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
+public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
 
     final LwM2MServer server;
 
-    Mono<ProtocolSupport> protocol;
+    private final Mono<ProtocolSupport> protocol;
 
     private final DeviceRegistry registry;
-
-    private final DeviceSessionManager sessionManager;
 
     private final LongAdder counter = new LongAdder();
 
@@ -73,7 +71,6 @@ class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
         this.protocol = protocol;
         this.registry = deviceRegistry;
         this.server = server;
-        this.sessionManager = sessionManager;
         this.helper = new DeviceGatewayHelper(registry, sessionManager, clientMessageHandler);
     }
 
@@ -86,9 +83,8 @@ class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
     }
 
     public NetworkType getNetworkType() {
-        return DefaultNetworkType.TCP_SERVER;
+        return DefaultNetworkType.LWM2M_SERVER;
     }
-
 
     private void doStart() {
 

@@ -3,9 +3,9 @@ package org.jetlinks.community.network.coap.server.coap;
 import io.netty.buffer.Unpooled;
 import org.apache.commons.collections.CollectionUtils;
 import org.jetlinks.community.network.coap.device.CoapServerExchangeMessage;
+import org.jetlinks.core.message.codec.CoapResponseMessage;
+import org.jetlinks.core.message.codec.DefaultCoapResponseMessage;
 import org.jetlinks.core.message.codec.http.HttpExchangeMessage;
-import org.jetlinks.core.message.codec.http.HttpResponseMessage;
-import org.jetlinks.core.message.codec.http.SimpleHttpResponseMessage;
 import org.jetlinks.core.trace.TraceHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,6 +17,7 @@ import javax.validation.constraints.NotNull;
  * COAP交换接口，支持获取请求和发送响应
  *
  * @author dumas.lee
+ * @version 2.0
  * @since 2.0
  */
 public interface CoapExchange {
@@ -72,12 +73,7 @@ public interface CoapExchange {
      * @return void
      */
     default Mono<Void> response(@NotNull HttpStatus status, @NotNull String body) {
-        return this.response(SimpleHttpResponseMessage
-            .builder()
-            .contentType(MediaType.APPLICATION_JSON)
-            .status(status.value())
-            .body(body.getBytes())
-            .build());
+        return this.response(DefaultCoapResponseMessage.of(body));
     }
 
     /**
@@ -94,16 +90,18 @@ public interface CoapExchange {
     /**
      * 根据HttpResponseMessage进行响应
      *
-     * @param message HttpResponseMessage
+     * @param message CoapResponseMessage
      * @return void
      */
-    default Mono<Void> response(HttpResponseMessage message) {
+    default Mono<Void> response(CoapResponseMessage message) {
         CoapResponse response = response();
-        response.status(message.getStatus());
-        if (CollectionUtils.isNotEmpty(message.getHeaders())) {
-            message.getHeaders().forEach(response::header);
+
+        response.status(message.getCode().value);
+        if (CollectionUtils.isNotEmpty(message.getOptions())) {
+            message.getOptions().forEach(item -> response.header(String.valueOf(item.getNumber()), item.getStringValue()));
         }
-        response.contentType(message.getContentType());
+        response.contentType(MediaType.parseMediaType(message.getPayloadType().name()));
+
         return TraceHolder
             .writeContextTo(response, CoapResponse::header)
             .then(response.writeAndEnd(message.getPayload()))
