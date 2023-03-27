@@ -289,6 +289,18 @@
             </dependency>
 
             <dependency>
+                <groupId>org.jetlinks</groupId>
+                <artifactId>reactor-ql</artifactId>
+                <version>${reactor.ql.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.hswebframework</groupId>
+                <artifactId>reactor-excel</artifactId>
+                <version>${reactor.excel.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.eclipse.californium</groupId>
                 <artifactId>californium-core</artifactId>
                 <version>${californium.version}</version>
@@ -304,18 +316,6 @@
                 <groupId>org.eclipse.leshan</groupId>
                 <artifactId>leshan-server-cf</artifactId>
                 <version>${leshan-server-cf.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.jetlinks</groupId>
-                <artifactId>reactor-ql</artifactId>
-                <version>${reactor.ql.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.hswebframework</groupId>
-                <artifactId>reactor-excel</artifactId>
-                <version>${reactor.excel.version}</version>
             </dependency>
 
             <dependency>

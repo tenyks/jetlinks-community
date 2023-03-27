@@ -61,7 +61,6 @@ public class CaliforniumCoapServer implements CoapServer {
     @Override
     public InetSocketAddress getBindAddress() {
         return bind;
-        //
     }
 
     public void setParserSupplier(Supplier<PayloadParser> parserSupplier) {

@@ -19,6 +19,8 @@ public interface LwM2MServer extends ServerNetwork {
      */
     Flux<LwM2MExchange> handleRequest();
 
+    void startUp();
+
     /**
      * 停止服务
      */

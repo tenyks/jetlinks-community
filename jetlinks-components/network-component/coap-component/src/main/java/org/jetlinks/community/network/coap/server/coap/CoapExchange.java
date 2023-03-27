@@ -115,11 +115,6 @@ public interface CoapExchange {
      * @see HttpExchangeMessage
      */
     default Mono<HttpExchangeMessage> toExchangeMessage() {
-        return Mono
-            .zip(
-                request().getBody().defaultIfEmpty(Unpooled.EMPTY_BUFFER),
-                request().multiPart(),
-                (body, part) -> new CoapServerExchangeMessage(this, body, part)
-            );
+        return Mono.empty();
     }
 }

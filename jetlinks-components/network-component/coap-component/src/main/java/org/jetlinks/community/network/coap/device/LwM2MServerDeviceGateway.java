@@ -87,7 +87,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
     }
 
     private void doStart() {
-
+        
     }
 
     @Override
