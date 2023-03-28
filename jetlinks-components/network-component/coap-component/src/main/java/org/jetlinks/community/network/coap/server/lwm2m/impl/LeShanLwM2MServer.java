@@ -37,7 +37,7 @@ public class LeShanLwM2MServer implements LwM2MServer {
     }
 
     public void setHttpServers(LeshanServer server) {
-        server.getRegistrationService().
+
     }
 
     @Override

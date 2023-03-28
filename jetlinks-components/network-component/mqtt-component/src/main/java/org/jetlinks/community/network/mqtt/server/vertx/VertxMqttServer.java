@@ -26,8 +26,7 @@ public class VertxMqttServer implements MqttServer {
 
     private final Sinks.Many<MqttConnection> sink = Reactors.createMany(5 * 1024, false);
 
-    private final Map<String, List<Sinks.Many<MqttConnection>>> sinks =
-        new NonBlockingHashMap<>();
+    private final Map<String, List<Sinks.Many<MqttConnection>>> sinks = new NonBlockingHashMap<>();
 
     private Collection<io.vertx.mqtt.MqttServer> mqttServer;
 
@@ -83,6 +82,7 @@ public class VertxMqttServer implements MqttServer {
                 anyHandled = true;
             }
         }
+
         if (!anyHandled) {
             connection.reject(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
         }

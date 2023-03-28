@@ -7,11 +7,11 @@ import org.eclipse.leshan.server.security.DefaultAuthorizer;
 import org.eclipse.leshan.server.security.SecurityChecker;
 import org.eclipse.leshan.server.security.SecurityStore;
 import org.jetlinks.core.device.DeviceRegistry;
+import org.jetlinks.core.device.LwM2MAuthenticationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
-import reactor.core.publisher.Mono;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -28,9 +28,9 @@ public class LwM2MAuthorizer extends DefaultAuthorizer {
 
     private DeviceRegistry deviceRegistry;
 
-    private FluxSink<RegistrationDemand> fluxSink;
+    private FluxSink<LwM2MAuthenticationRequest> fluxSink;
 
-    private Flux<RegistrationDemand> flux;
+    private Flux<LwM2MAuthenticationRequest> flux;
 
     public LwM2MAuthorizer(SecurityStore store, DeviceRegistry deviceRegistry) {
         super(store);
@@ -48,76 +48,50 @@ public class LwM2MAuthorizer extends DefaultAuthorizer {
 
     private void init() {
         this.flux = Flux.create(emitter -> this.fluxSink = emitter);
-        this.flux.subscribe(this::_isAuthorized);
+    }
+
+    public Flux<LwM2MAuthenticationRequest>     handleAuthentication() {
+        return this.flux;
     }
 
     @Override
     public Registration isAuthorized(UplinkRequest<?> request, Registration registration, Identity senderIdentity) {
-        // 父方法认证
-//        registration = super.isAuthorized(request, registration, senderIdentity);
-//        if (registration != null) {
-//            return registration;
-//        }
-
-        RegistrationDemand demand = new RegistrationDemand(request, registration, senderIdentity);
-        fluxSink.next(demand);
+        _LwM2MAuthenticationRequest authReq = new _LwM2MAuthenticationRequest(registration);
+        fluxSink.next(authReq);
 
         try {
-            return demand.getResultFuture().get(10, TimeUnit.SECONDS);
+            return authReq.getResultFuture().get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
-            log.error("[Registration]", e);
+            log.error("LwM2M设备认证超时：req={}, reg={}", request, registration, e);
             return null;
         }
     }
 
+    private static class _LwM2MAuthenticationRequest extends LwM2MAuthenticationRequest {
 
+        private final CompletableFuture<Registration> resultFuture;
 
-    private Mono<RegistrationDemand> _isAuthorized(RegistrationDemand demand) {
-        Registration registration = demand.getRegistration();
+        private Registration      registration;
 
-        // 设备imei号码认证
-        String deviceId = registration.getEndpoint();
-        return deviceRegistry.getDevice(deviceId)
-            .map(deviceOperator -> {
-                demand.resultFuture.complete(registration);
-                return demand;
-            })
-            .switchIfEmpty(d -> {
-                demand.resultFuture.complete(null);
-                return demand;
-            });
-    }
+        public _LwM2MAuthenticationRequest(Registration registration) {
+            super(registration.getEndpoint());
 
-    private class RegistrationDemand {
-        private UplinkRequest<?> request;
-
-        private Registration registration;
-
-        private Identity senderIdentity;
-
-        private CompletableFuture<Registration> resultFuture;
-
-        public RegistrationDemand(UplinkRequest<?> request, Registration registration, Identity senderIdentity) {
-            this.request = request;
             this.registration = registration;
-            this.senderIdentity = senderIdentity;
             this.resultFuture = new CompletableFuture<>();
         }
 
-        public UplinkRequest<?> getRequest() {
-            return request;
-        }
-
-        public Registration getRegistration() {
-            return registration;
-        }
-
-        public Identity getSenderIdentity() {
-            return senderIdentity;
+        @Override
+        public void complete(boolean accepted) {
+            if (accepted) {
+                this.resultFuture.complete(registration);
+            } else {
+                this.resultFuture.complete(null);
+            }
         }
 
         public CompletableFuture<Registration> getResultFuture() {
             return resultFuture;
         }
     }
+
 }
