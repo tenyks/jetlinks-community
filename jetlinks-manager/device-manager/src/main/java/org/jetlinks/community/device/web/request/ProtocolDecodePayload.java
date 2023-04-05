@@ -8,6 +8,8 @@ import org.jetlinks.core.ProtocolSupport;
 import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.message.Message;
 import org.jetlinks.core.message.codec.*;
+import org.jetlinks.core.message.codec.coap.DefaultCoapMessage;
+import org.jetlinks.core.message.codec.mqtt.SimpleMqttMessage;
 import org.jetlinks.core.server.session.DeviceSession;
 import org.jetlinks.rule.engine.executor.PayloadType;
 import org.reactivestreams.Publisher;

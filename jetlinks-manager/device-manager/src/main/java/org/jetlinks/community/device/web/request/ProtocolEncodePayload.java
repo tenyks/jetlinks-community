@@ -10,7 +10,7 @@ import org.jetlinks.core.message.Message;
 import org.jetlinks.core.message.MessageType;
 import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.message.codec.MessageEncodeContext;
-import org.jetlinks.core.message.codec.MqttMessage;
+import org.jetlinks.core.message.codec.mqtt.MqttMessage;
 import org.jetlinks.rule.engine.executor.PayloadType;
 import org.reactivestreams.Publisher;
 
