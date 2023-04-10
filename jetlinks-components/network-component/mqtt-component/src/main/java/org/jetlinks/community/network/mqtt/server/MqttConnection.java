@@ -1,7 +1,7 @@
 package org.jetlinks.community.network.mqtt.server;
 
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
-import org.jetlinks.core.message.codec.MqttMessage;
+import org.jetlinks.core.message.codec.mqtt.MqttMessage;
 import org.jetlinks.core.server.ClientConnection;
 import org.jetlinks.core.server.mqtt.MqttAuth;
 import reactor.core.publisher.Flux;

@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.jetlinks.core.message.codec.MqttMessage;
+import org.jetlinks.core.message.codec.mqtt.MqttMessage;
 import org.jetlinks.rule.engine.executor.PayloadType;
 
 /**

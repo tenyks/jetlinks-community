@@ -12,7 +12,7 @@ import org.jetlinks.community.network.resource.NetworkTransport;
 @Setter
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
+//@NoArgsConstructor
 public class LwM2MServerConfig extends AbstractServerNetworkConfig {
     @Override
     public NetworkTransport getTransport() {

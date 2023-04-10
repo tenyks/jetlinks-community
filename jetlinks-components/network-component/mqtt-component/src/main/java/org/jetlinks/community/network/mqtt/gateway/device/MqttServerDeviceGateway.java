@@ -18,6 +18,7 @@ import org.jetlinks.core.device.*;
 import org.jetlinks.core.device.session.DeviceSessionManager;
 import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.codec.*;
+import org.jetlinks.core.message.codec.mqtt.MqttMessage;
 import org.jetlinks.core.server.session.DeviceSession;
 import org.jetlinks.core.server.session.KeepOnlineSession;
 import org.jetlinks.core.trace.FluxTracer;

@@ -1,10 +1,8 @@
 package org.jetlinks.community.network.coap.server.coap;
 
-import io.netty.buffer.Unpooled;
 import org.apache.commons.collections.CollectionUtils;
-import org.jetlinks.community.network.coap.device.CoapServerExchangeMessage;
-import org.jetlinks.core.message.codec.CoapResponseMessage;
-import org.jetlinks.core.message.codec.DefaultCoapResponseMessage;
+import org.jetlinks.core.message.codec.coap.CoapResponseMessage;
+import org.jetlinks.core.message.codec.coap.DefaultCoapResponseMessage;
 import org.jetlinks.core.message.codec.http.HttpExchangeMessage;
 import org.jetlinks.core.trace.TraceHolder;
 import org.springframework.http.HttpStatus;

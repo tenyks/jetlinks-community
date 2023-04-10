@@ -2,8 +2,9 @@ package org.jetlinks.community.network.manager.web.request;
 
 import lombok.*;
 import org.hswebframework.web.bean.FastBeanCopier;
-import org.jetlinks.core.message.codec.MqttMessage;
-import org.jetlinks.core.message.codec.SimpleMqttMessage;
+
+import org.jetlinks.core.message.codec.mqtt.MqttMessage;
+import org.jetlinks.core.message.codec.mqtt.SimpleMqttMessage;
 import org.jetlinks.rule.engine.executor.PayloadType;
 
 /**

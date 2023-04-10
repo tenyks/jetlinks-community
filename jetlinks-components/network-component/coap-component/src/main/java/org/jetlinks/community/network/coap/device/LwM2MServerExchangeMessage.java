@@ -6,6 +6,6 @@ import org.jetlinks.core.message.codec.http.MultiPart;
 
 public class LwM2MServerExchangeMessage extends CoapServerExchangeMessage {
     public LwM2MServerExchangeMessage(LwM2MExchange exchange, ByteBuf payload, MultiPart multiPart) {
-        super(exchange, payload, multiPart);
+//        super(exchange, payload, multiPart);
     }
 }
