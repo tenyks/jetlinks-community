@@ -5,9 +5,12 @@ import lombok.Getter;
 import lombok.Setter;
 import org.eclipse.leshan.server.californium.LeshanServer;
 import org.jetlinks.community.network.NetworkType;
-import org.jetlinks.community.network.coap.server.lwm2m.LwM2MExchange;
 import org.jetlinks.community.network.coap.server.lwm2m.LwM2MServer;
+import org.jetlinks.core.device.LwM2MAuthenticationRequest;
+import org.jetlinks.core.message.codec.lwm2m.LwM2MDownlinkMessage;
+import org.jetlinks.core.message.codec.lwm2m.LwM2MExchangeMessage;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
@@ -36,12 +39,22 @@ public class LeShanLwM2MServer implements LwM2MServer {
         this.id = config.getId();
     }
 
-    public void setHttpServers(LeshanServer server) {
+    private void initLeShanServer() {
 
     }
 
     @Override
-    public Flux<LwM2MExchange> handleRequest() {
+    public Flux<LwM2MExchangeMessage> handleRequest() {
+        return null;
+    }
+
+    @Override
+    public Flux<LwM2MAuthenticationRequest> handleAuth() {
+        return null;
+    }
+
+    @Override
+    public Mono<Void> send(LwM2MDownlinkMessage message) {
         return null;
     }
 

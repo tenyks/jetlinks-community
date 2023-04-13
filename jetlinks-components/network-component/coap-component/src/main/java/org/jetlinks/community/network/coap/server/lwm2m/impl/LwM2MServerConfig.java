@@ -16,7 +16,7 @@ import org.jetlinks.community.network.resource.NetworkTransport;
 public class LwM2MServerConfig extends AbstractServerNetworkConfig {
     @Override
     public NetworkTransport getTransport() {
-        return NetworkTransport.TCP;
+        return NetworkTransport.UDP;
     }
 
     @Override

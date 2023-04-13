@@ -1,7 +1,11 @@
 package org.jetlinks.community.network.coap.server.lwm2m;
 
 import org.jetlinks.community.network.ServerNetwork;
+import org.jetlinks.core.device.LwM2MAuthenticationRequest;
+import org.jetlinks.core.message.codec.lwm2m.LwM2MDownlinkMessage;
+import org.jetlinks.core.message.codec.lwm2m.LwM2MExchangeMessage;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * LwM2M服务端
@@ -17,12 +21,28 @@ public interface LwM2MServer extends ServerNetwork {
      *
      * @return LwM2MExchange
      */
-    Flux<LwM2MExchange> handleRequest();
+    Flux<LwM2MExchangeMessage> handleRequest();
 
+    /**
+     * @return  监听设备认证请求
+     */
+    Flux<LwM2MAuthenticationRequest>    handleAuth();
+
+    /**
+     * 发送消息到客户端
+     *
+     * @param message MQTT消息
+     * @return 异步推送结果
+     */
+    Mono<Void> send(LwM2MDownlinkMessage message);
+
+    /**
+     * 启动服务端
+     */
     void startUp();
 
     /**
-     * 停止服务
+     * 停止服务端
      */
     void shutdown();
 }
