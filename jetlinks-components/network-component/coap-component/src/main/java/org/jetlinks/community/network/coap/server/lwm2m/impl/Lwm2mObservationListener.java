@@ -7,6 +7,7 @@ import org.eclipse.leshan.core.response.ObserveResponse;
 import org.eclipse.leshan.core.util.Hex;
 import org.eclipse.leshan.server.observation.ObservationListener;
 import org.eclipse.leshan.server.registration.Registration;
+import org.jetlinks.core.message.codec.lwm2m.LwM2MUplinkMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -18,9 +19,9 @@ import reactor.core.publisher.FluxSink;
 public class Lwm2mObservationListener implements ObservationListener {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private Flux<LwM2MMessage>      flux;
+    private Flux<LwM2MUplinkMessage>      flux;
 
-    private FluxSink<LwM2MMessage>  fluxSink;
+    private FluxSink<LwM2MUplinkMessage>  fluxSink;
 
     public Lwm2mObservationListener() {
         flux = Flux.create(sink -> this.fluxSink = sink);
@@ -31,7 +32,7 @@ public class Lwm2mObservationListener implements ObservationListener {
         logger.warn("lwm2m2 observe cancelled ");
     }
 
-    public Flux<LwM2MMessage> handleObservation() {
+    public Flux<LwM2MUplinkMessage> handleObservation() {
         return flux;
     }
 

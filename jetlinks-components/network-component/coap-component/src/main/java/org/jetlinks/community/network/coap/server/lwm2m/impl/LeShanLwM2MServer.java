@@ -23,8 +23,6 @@ public class LeShanLwM2MServer implements LwM2MServer {
 
     private LeshanServer    server;
 
-    private LwM2MServerConfig   config;
-
     private String  id;
 
     @Getter
@@ -34,13 +32,12 @@ public class LeShanLwM2MServer implements LwM2MServer {
     @Setter(AccessLevel.PACKAGE)
     private InetSocketAddress bindAddress;
 
-    public LeShanLwM2MServer(LwM2MServerConfig config) {
-        this.config = config;
-        this.id = config.getId();
+    public LeShanLwM2MServer(String id) {
+        this.id = id;
     }
 
-    private void initLeShanServer() {
-
+    public void setLeShanServer(LeshanServer server) {
+        this.server = server;
     }
 
     @Override

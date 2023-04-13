@@ -3,6 +3,9 @@ package org.jetlinks.community.standalone.configuration;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.leshan.server.security.FileSecurityStore;
+import org.eclipse.leshan.server.security.InMemorySecurityStore;
+import org.eclipse.leshan.server.security.SecurityStore;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
@@ -36,5 +39,9 @@ public class JetLinksConfiguration {
         return Vertx.vertx(vertxOptions);
     }
 
+    @Bean
+    public SecurityStore securityStore() {
+        return new InMemorySecurityStore();
+    }
 
 }
