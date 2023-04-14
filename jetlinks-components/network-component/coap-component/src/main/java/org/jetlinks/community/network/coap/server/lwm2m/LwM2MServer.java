@@ -20,9 +20,15 @@ public interface LwM2MServer extends ServerNetwork {
     /**
      * 监听所有请求
      *
-     * @return LwM2MExchange
+     * @return Observation回复消息
      */
-    Flux<LwM2MUplinkMessage> handleObservation();
+    Flux<LwM2MUplinkMessage>    handleObservation();
+
+    /**
+     * 监听Reply消息，如：指令回复、读属性的回复等
+     * @return  Reply消息
+     */
+    Flux<LwM2MUplinkMessage>    handleReply();
 
     /**
      * @return  监听设备认证请求

@@ -1,13 +1,16 @@
 package org.jetlinks.community.network.coap.server.lwm2m.impl;
 
 
+import io.netty.buffer.Unpooled;
+import org.eclipse.californium.core.coap.Response;
 import org.eclipse.leshan.core.node.LwM2mSingleResource;
 import org.eclipse.leshan.core.observation.Observation;
 import org.eclipse.leshan.core.response.ObserveResponse;
-import org.eclipse.leshan.core.util.Hex;
 import org.eclipse.leshan.server.observation.ObservationListener;
 import org.eclipse.leshan.server.registration.Registration;
+import org.jetlinks.core.message.codec.lwm2m.LwM2MResource;
 import org.jetlinks.core.message.codec.lwm2m.LwM2MUplinkMessage;
+import org.jetlinks.core.message.codec.lwm2m.SimpleLwM2MUplinkMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -46,9 +49,18 @@ public class Lwm2mObservationListener implements ObservationListener {
         String  path = observation.getPath().toString();
         String  ep = registration.getEndpoint();
         LwM2mSingleResource content = (LwM2mSingleResource) response.getContent();
-        String payload = new String(Hex.encodeHex((byte[]) content.getValue()));
 
-//        fluxSink.next()
+        SimpleLwM2MUplinkMessage message = new SimpleLwM2MUplinkMessage();
+
+        Response coapRsp = (Response) response.getCoapResponse();
+
+        //TODO 根据observation.path确定是哪种资源
+        message.setResource(LwM2MResource.BinaryAppDataContainerReport);
+        message.setPayload(Unpooled.wrappedBuffer((byte[]) content.getValue()));
+        message.setMessageId(coapRsp.getMID());
+        message.setRegistrationId(registration.getId());
+
+        fluxSink.next(message);
     }
 
     @Override
