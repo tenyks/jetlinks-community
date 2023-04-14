@@ -26,7 +26,7 @@ public class LwM2MAuthorizer extends DefaultAuthorizer {
 
     private static final Logger log = LoggerFactory.getLogger(LwM2MAuthorizer.class);
 
-    private DeviceRegistry deviceRegistry;
+    private final DeviceRegistry deviceRegistry;
 
     private FluxSink<LwM2MAuthenticationRequest> fluxSink;
 
@@ -80,7 +80,6 @@ public class LwM2MAuthorizer extends DefaultAuthorizer {
             this.resultFuture = new CompletableFuture<>();
         }
 
-        @Override
         public void complete(boolean accepted) {
             if (accepted) {
                 this.resultFuture.complete(registration);

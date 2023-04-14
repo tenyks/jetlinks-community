@@ -1,6 +1,5 @@
 package org.jetlinks.community.network.coap.server.lwm2m.impl;
 
-import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.leshan.core.model.ObjectLoader;
 import org.eclipse.leshan.core.model.ObjectModel;
@@ -114,13 +113,13 @@ public class DefaultLeShanLwM2MServerProvider implements NetworkProvider<LeShanL
         builder.setRegistrationIdProvider(new Lwm2mRegistrationIdProvider());
 
         // 设置授权认证
-        builder.setAuthorizer(new LwM2MAuthorizer(null, deviceRegistry));
+        builder.setAuthorizer(server.buildAndBindAuthorizer(securityStore, deviceRegistry));
         LeshanServer lsServer = builder.build();
 
         // 设置监听器
-        lsServer.getRegistrationService().addListener(new Lwm2mRegistrationListener());
-        lsServer.getPresenceService().addListener(new Lwm2mPresenceListener());
-        lsServer.getObservationService().addListener(new Lwm2mObservationListener());
+        lsServer.getRegistrationService().addListener(server.buildAndBindRegistrationListener());
+        lsServer.getPresenceService().addListener(server.buildAndBindPresenceListener());
+        lsServer.getObservationService().addListener(server.buildAndBindObservationListener());
 
         server.setLeShanServer(lsServer);
         server.setBindAddress(new InetSocketAddress(properties.getHost(), properties.getPort()));

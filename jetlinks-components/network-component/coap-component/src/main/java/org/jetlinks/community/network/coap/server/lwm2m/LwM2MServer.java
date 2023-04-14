@@ -4,6 +4,7 @@ import org.jetlinks.community.network.ServerNetwork;
 import org.jetlinks.core.device.LwM2MAuthenticationRequest;
 import org.jetlinks.core.message.codec.lwm2m.LwM2MDownlinkMessage;
 import org.jetlinks.core.message.codec.lwm2m.LwM2MExchangeMessage;
+import org.jetlinks.core.message.codec.lwm2m.LwM2MUplinkMessage;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -21,7 +22,7 @@ public interface LwM2MServer extends ServerNetwork {
      *
      * @return LwM2MExchange
      */
-    Flux<LwM2MExchangeMessage> handleRequest();
+    Flux<LwM2MUplinkMessage> handleObservation();
 
     /**
      * @return  监听设备认证请求
