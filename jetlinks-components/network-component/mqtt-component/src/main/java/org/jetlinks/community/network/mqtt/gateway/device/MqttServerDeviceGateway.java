@@ -47,6 +47,7 @@ import static org.jetlinks.core.trace.DeviceTracer.SpanName;
  *     4. 认证通过后应答mqtt,注册会话{@link DeviceSessionManager#compute(String, Function)}.
  *     5. 监听mqtt消息推送,{@link MqttConnection#handleMessage()}
  *     6. 当收到消息时,调用对应设备使用的协议{@link ProtocolSupport#getMessageCodec(Transport)}进行解码{@link DeviceMessageCodec#decode(MessageDecodeContext)}
+ *     7. 消息解码后调用{@link DeviceGatewayHelper#handleDeviceMessage(org.jetlinks.core.message.DeviceMessage, java.util.function.Function, java.util.function.Consumer, java.lang.Runnable)}
  * </pre>
  *
  * @author zhouhao

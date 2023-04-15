@@ -1,7 +1,6 @@
 package org.jetlinks.community.network.coap.server.coap;
 
 import org.jetlinks.community.network.Network;
-import org.jetlinks.community.network.coap.CoapMessage;
 import org.jetlinks.community.network.parser.PayloadParser;
 
 import org.jetlinks.core.server.ClientConnection;

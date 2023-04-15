@@ -28,12 +28,17 @@ public interface LwM2MServer extends ServerNetwork {
      * 监听Reply消息，如：指令回复、读属性的回复等
      * @return  Reply消息
      */
-    Flux<LwM2MUplinkMessage>    handleReply();
+    Flux<LwM2MExchangeMessage>    handleReply();
 
     /**
      * @return  监听设备认证请求
      */
-    Flux<LwM2MAuthenticationRequest>    handleAuth();
+    Flux<LwM2MAuthenticationRequest> handleAuthentication();
+
+    /**
+     * @return  监听设备上下线事件
+     */
+    Flux<LwM2MRegistrationEvent>    handleRegistrationEvent();
 
     /**
      * 发送消息到客户端
@@ -41,7 +46,7 @@ public interface LwM2MServer extends ServerNetwork {
      * @param message MQTT消息
      * @return 异步推送结果
      */
-    Mono<Void> send(LwM2MDownlinkMessage message);
+    Mono<Boolean> send(LwM2MDownlinkMessage message);
 
     /**
      * 启动服务端

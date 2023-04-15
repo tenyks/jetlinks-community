@@ -1,4 +1,4 @@
-package org.jetlinks.community.network.coap;
+package org.jetlinks.community.network.coap.server.coap;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;

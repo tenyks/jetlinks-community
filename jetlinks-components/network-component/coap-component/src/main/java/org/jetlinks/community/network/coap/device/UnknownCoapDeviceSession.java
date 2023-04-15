@@ -7,7 +7,7 @@ import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.message.codec.EncodedMessage;
 import org.jetlinks.core.message.codec.Transport;
 import org.jetlinks.core.server.session.DeviceSession;
-import org.jetlinks.community.network.coap.CoapMessage;
+import org.jetlinks.community.network.coap.server.coap.CoapMessage;
 import reactor.core.publisher.Mono;
 
 import java.net.InetSocketAddress;

@@ -60,7 +60,7 @@ public class LwM2MAuthorizer extends DefaultAuthorizer {
         fluxSink.next(authReq);
 
         try {
-            return authReq.getResultFuture().get(10, TimeUnit.SECONDS);
+            return authReq.getResultFuture().get(5, TimeUnit.SECONDS);
         } catch (Exception e) {
             log.error("LwM2M设备认证超时：req={}, reg={}", request, registration, e);
             return null;

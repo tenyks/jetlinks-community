@@ -21,7 +21,7 @@ import org.jetlinks.community.gateway.DeviceGateway;
 import org.jetlinks.community.gateway.monitor.MonitorSupportDeviceGateway;
 import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkType;
-import org.jetlinks.community.network.coap.CoapMessage;
+import org.jetlinks.community.network.coap.server.coap.CoapMessage;
 import org.jetlinks.community.network.coap.server.coap.CoapServer;
 import org.jetlinks.community.gateway.DeviceGatewayHelper;
 import org.jetlinks.community.utils.TimeUtils;

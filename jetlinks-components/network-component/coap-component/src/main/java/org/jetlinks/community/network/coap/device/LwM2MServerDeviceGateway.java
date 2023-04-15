@@ -1,40 +1,28 @@
 package org.jetlinks.community.network.coap.device;
 
+import groovy.lang.Tuple;
 import lombok.extern.slf4j.Slf4j;
 import org.hswebframework.web.logger.ReactiveLogger;
 import org.jetlinks.community.gateway.AbstractDeviceGateway;
-import org.jetlinks.community.gateway.DeviceGateway;
 import org.jetlinks.community.gateway.DeviceGatewayHelper;
-import org.jetlinks.community.gateway.monitor.MonitorSupportDeviceGateway;
 import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkType;
-import org.jetlinks.community.network.coap.CoapMessage;
-import org.jetlinks.community.network.coap.server.coap.CoapServer;
 import org.jetlinks.community.network.coap.server.lwm2m.LwM2MServer;
-import org.jetlinks.community.utils.TimeUtils;
 import org.jetlinks.core.ProtocolSupport;
+import org.jetlinks.core.device.AuthenticationResponse;
 import org.jetlinks.core.device.DeviceOperator;
-import org.jetlinks.core.device.DeviceProductOperator;
 import org.jetlinks.core.device.DeviceRegistry;
+import org.jetlinks.core.device.LwM2MAuthenticationRequest;
 import org.jetlinks.core.device.session.DeviceSessionManager;
-import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.codec.DefaultTransport;
-import org.jetlinks.core.message.codec.FromDeviceMessageContext;
 import org.jetlinks.core.message.codec.Transport;
-import org.jetlinks.core.server.DeviceGatewayContext;
-import org.jetlinks.core.server.session.DeviceSession;
-import org.jetlinks.core.trace.DeviceTracer;
-import org.jetlinks.core.trace.MonoTracer;
 import org.jetlinks.supports.server.DecodedClientMessageHandler;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuple2;
 
-import java.net.InetSocketAddress;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -87,7 +75,37 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
     }
 
     private void doStart() {
-        
+        if (started.getAndSet(true) || disposable != null) {
+            return;
+        }
+
+        Disposable forAuthDisposable = server
+            .handleAuthentication()
+            .publishOn(Schedulers.parallel())
+            .flatMap(authReq -> handleAuthRequest(authReq)
+                    .onErrorResume(err -> {
+                        log.error("handle tcp client[{}] error", authReq, err);
+                        return Mono.empty();
+                    })
+                , Integer.MAX_VALUE)
+            .contextWrite(ReactiveLogger.start("network", server.getId()))
+            .subscribe(
+                ignore -> {},
+                error -> log.error(error.getMessage(), error)
+            );
+
+        Disposable forObservationDisposable = server
+            .handleObservation()
+            .publishOn(Schedulers.boundedElastic())
+            .flatMap(message -> {
+                return message;
+            }, Integer.MAX_VALUE)
+            .subscribe(ignore -> {
+            }, error -> log.error(error.getMessage(), error));
+    }
+
+    private Mono<Tuple2<DeviceOperator, AuthenticationResponse>>    handleAuthRequest(LwM2MAuthenticationRequest authReq) {
+        return Mono.empty();
     }
 
     @Override

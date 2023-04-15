@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Lwm2m协议设备休眠和欢喜状态，暂时不需要推送该数据
+ * Lwm2m协议设备休眠和唤醒状态，暂时不需要推送该数据
  */
 public class Lwm2mPresenceListener implements PresenceListener {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());

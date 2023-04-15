@@ -7,35 +7,38 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.californium.core.coap.Response;
 import org.eclipse.leshan.core.request.ExecuteRequest;
+import org.eclipse.leshan.core.request.exception.*;
 import org.eclipse.leshan.core.response.ErrorCallback;
 import org.eclipse.leshan.core.response.ExecuteResponse;
-import org.eclipse.leshan.core.response.LwM2mResponse;
 import org.eclipse.leshan.core.response.ResponseCallback;
 import org.eclipse.leshan.core.util.Hex;
 import org.eclipse.leshan.server.californium.LeshanServer;
+import org.eclipse.leshan.server.observation.ObservationListener;
+import org.eclipse.leshan.server.queue.PresenceListener;
 import org.eclipse.leshan.server.registration.Registration;
+import org.eclipse.leshan.server.registration.RegistrationListener;
+import org.eclipse.leshan.server.security.Authorizer;
 import org.eclipse.leshan.server.security.SecurityStore;
 import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkType;
+import org.jetlinks.community.network.coap.server.lwm2m.LwM2MRegistrationEvent;
 import org.jetlinks.community.network.coap.server.lwm2m.LwM2MServer;
 import org.jetlinks.core.device.DeviceRegistry;
 import org.jetlinks.core.device.LwM2MAuthenticationRequest;
-import org.jetlinks.core.message.codec.lwm2m.LwM2MDownlinkMessage;
-import org.jetlinks.core.message.codec.lwm2m.LwM2MUplinkMessage;
-import org.jetlinks.core.message.codec.lwm2m.SimpleLwM2MUplinkMessage;
+import org.jetlinks.core.message.codec.lwm2m.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuple3;
-import reactor.util.function.Tuples;
 
 import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
 
 /**
+ * 基于Eclipse LeShan的LwM2M协议服务器
  * @author v-lizy8
  * @date 2023/3/27
+ * @version 1.0
+ * @since 2.0
  */
 @Slf4j
 public class LeShanLwM2MServer implements LwM2MServer {
@@ -44,6 +47,11 @@ public class LeShanLwM2MServer implements LwM2MServer {
 
     private LeshanServer    server;
 
+    /**
+     * 响应超时的时长，单位：毫秒
+     */
+    private long            responseWaitTime;
+
     @Getter
     @Setter
     private String lastError;
@@ -51,16 +59,19 @@ public class LeShanLwM2MServer implements LwM2MServer {
     @Setter(AccessLevel.PACKAGE)
     private InetSocketAddress bindAddress;
 
-    private LwM2MAuthorizer authorizer;
+    private LwM2MAuthorizer             authorizer;
 
     private Lwm2mObservationListener    observationListener;
 
-    private Flux<Tuple3<LwM2MDownlinkMessage, LwM2MUplinkMessage, Exception>> replyFlux;
+    private Lwm2mRegistrationListener   registrationListener;
 
-    private FluxSink<Tuple3<LwM2MDownlinkMessage, LwM2MUplinkMessage, Exception>> replyFluxSink;
+    private Flux<LwM2MExchangeMessage>  replyFlux;
 
-    public LeShanLwM2MServer(String id) {
+    private FluxSink<LwM2MExchangeMessage> replyFluxSink;
+
+    public LeShanLwM2MServer(String id, long responseWaitTime) {
         this.id = id;
+        this.responseWaitTime = responseWaitTime;
 
         this.replyFlux = Flux.create(sink -> this.replyFluxSink = sink);
     }
@@ -70,7 +81,7 @@ public class LeShanLwM2MServer implements LwM2MServer {
     }
 
     @Override
-    public Flux<LwM2MAuthenticationRequest> handleAuth() {
+    public Flux<LwM2MAuthenticationRequest> handleAuthentication() {
         return authorizer.handleAuthentication();
     }
 
@@ -80,40 +91,76 @@ public class LeShanLwM2MServer implements LwM2MServer {
     }
 
     @Override
-    public Flux<LwM2MUplinkMessage> handleReply() {
-        return null;
+    public Flux<LwM2MExchangeMessage> handleReply() {
+        return replyFlux;
     }
 
     @Override
-    public Mono<Void> send(LwM2MDownlinkMessage message) {
+    public Flux<LwM2MRegistrationEvent> handleRegistrationEvent() {
+        return registrationListener.handleRegistrationEvent();
+    }
+
+    @Override
+    public Mono<Boolean> send(LwM2MDownlinkMessage message) {
         final Registration registration = server.getRegistrationService().getById(message.getRegistrationId());
         if (registration == null) {
-            return Mono.empty();
+            return Mono.error(new IllegalStateException("会话已过期或设备已离线[0x05LSLMS9381]"));
         }
 
-        String payload = Hex.encodeHexString(message.getPayload().array());
-        final ExecuteRequest request = new ExecuteRequest(message.getObjectAndResource().getPath(), payload);
-
         return Mono.fromCallable(() -> {
-            ResponseCallback<ExecuteResponse>   rspCallback = (rsp) -> {
-                SimpleLwM2MUplinkMessage uplinkMessage = new SimpleLwM2MUplinkMessage();
-                Response coapResponse = (Response) rsp.getCoapResponse();
-                uplinkMessage.setMessageId(coapResponse.getMID());
-                uplinkMessage.setRegistrationId(message.getRegistrationId());
-                uplinkMessage.setResource(message.getObjectAndResource());
-                uplinkMessage.setCode(rsp.getCode().getCode());
-                uplinkMessage.setPayload(Unpooled.wrappedBuffer(coapResponse.getPayload()));
+            String payload = Hex.encodeHexString(message.getPayload().array());
+            final ExecuteRequest request = new ExecuteRequest(message.getObjectAndResource().getPath(), payload);
 
-                replyFluxSink.next(Tuples.of(message, uplinkMessage, null));
-            };
-            ErrorCallback errorCallback = (e) -> {
-                replyFluxSink.next(Tuples.of(message, null, e));
-            };
+            server.send(registration, request, responseWaitTime,
+                        buildResponseCallback(message), buildErrorCallback(message));
 
-            server.send(registration, request, 5000, rspCallback, errorCallback);
+            return true;
+        });
+    }
 
-            return null;
-        }).then();
+    private ResponseCallback<ExecuteResponse> buildResponseCallback(LwM2MDownlinkMessage message) {
+        return new ResponseCallback<ExecuteResponse>() {
+            @Override
+            public void onResponse(ExecuteResponse response) {
+                SimpleLwM2MUplinkMessage replyMessage = new SimpleLwM2MUplinkMessage();
+                Response coapResponse = (Response) response.getCoapResponse();
+                replyMessage.setMessageId(coapResponse.getMID());
+                replyMessage.setRegistrationId(message.getRegistrationId());
+                replyMessage.setResource(message.getObjectAndResource());
+                replyMessage.setCode(response.getCode().getCode());
+                replyMessage.setPayload(Unpooled.wrappedBuffer(coapResponse.getPayload()));
+
+                replyFluxSink.next(SimpleLwM2MExchangeMessage.ofSuccess(message, replyMessage));
+            }
+        };
+    }
+
+    private ErrorCallback    buildErrorCallback(LwM2MDownlinkMessage message) {
+        return new ErrorCallback() {
+            @Override
+            public void onError(Exception e) {
+                String rstCode;
+                String rstMsg = e.getMessage();
+
+                if (e instanceof RequestRejectedException) {
+                    rstCode = LwM2MExchangeMessage.RC_REJECTED_BY_PEER;
+                } else if (e instanceof RequestCanceledException) {
+                    rstCode = LwM2MExchangeMessage.RC_CANCELLED;
+                } else if (e instanceof SendFailedException) {
+                    rstCode = LwM2MExchangeMessage.RC_SEND_FAIL;
+                } else if (e instanceof InvalidResponseException) {
+                    rstCode = LwM2MExchangeMessage.RC_UNKNOWN_RESPONSE;
+                } else if (e instanceof ClientSleepingException) {
+                    rstCode = LwM2MExchangeMessage.RC_CLIENT_SLEEP;
+                } else if (e instanceof TimeoutException) {
+                    rstCode = LwM2MExchangeMessage.RC_TIMEOUT;
+                } else {
+                    rstCode = "RC_NOT_CLASSIFIED";
+                }
+
+                replyFluxSink.next(SimpleLwM2MExchangeMessage.ofFail(message, rstCode, rstMsg, e));
+            }
+        };
     }
 
     @Override
@@ -139,6 +186,7 @@ public class LeShanLwM2MServer implements LwM2MServer {
         server = null;
         authorizer = null;
         observationListener = null;
+        registrationListener = null;
 
         log.debug("LwM2M server [{}] closed", id);
     }
@@ -159,20 +207,21 @@ public class LeShanLwM2MServer implements LwM2MServer {
         return bindAddress;
     }
 
-    public LwM2MAuthorizer buildAndBindAuthorizer(SecurityStore store, DeviceRegistry deviceRegistry) {
+    public Authorizer buildAndBindAuthorizer(SecurityStore store, DeviceRegistry deviceRegistry) {
         this.authorizer = new LwM2MAuthorizer(store, deviceRegistry);
-        return authorizer;
+        return this.authorizer;
     }
 
-    public Lwm2mRegistrationListener buildAndBindRegistrationListener() {
-        return new Lwm2mRegistrationListener();
+    public RegistrationListener buildAndBindRegistrationListener() {
+        this.registrationListener = new Lwm2mRegistrationListener();
+        return this.registrationListener;
     }
 
-    public Lwm2mPresenceListener buildAndBindPresenceListener() {
+    public PresenceListener buildAndBindPresenceListener() {
         return new Lwm2mPresenceListener();
     }
 
-    public Lwm2mObservationListener buildAndBindObservationListener() {
+    public ObservationListener buildAndBindObservationListener() {
         this.observationListener =  new Lwm2mObservationListener();
         return this.observationListener;
     }

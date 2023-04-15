@@ -30,9 +30,14 @@ import java.util.List;
 @Component
 public class DefaultLeShanLwM2MServerProvider implements NetworkProvider<LeShanLwM2MServerProperties> {
 
-    public static final String[] MODEL_PATHS = new String[]{
+    private static final String[] MODEL_PATHS = new String[]{
         "19.mxl"
     };
+
+    /**
+     * 响应等待时长，单位：毫秒
+     */
+    private static final long   RESPONSE_WAIT_TIME = 5000;
 
     private final CertificateManager certificateManager;
 
@@ -57,7 +62,7 @@ public class DefaultLeShanLwM2MServerProvider implements NetworkProvider<LeShanL
     @Nonnull
     @Override
     public Mono<Network> createNetwork(@Nonnull LeShanLwM2MServerProperties properties) {
-        LeShanLwM2MServer server = new LeShanLwM2MServer(properties.getId());
+        LeShanLwM2MServer server = new LeShanLwM2MServer(properties.getId(), RESPONSE_WAIT_TIME);
         return initServer(server, properties);
     }
 
