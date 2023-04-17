@@ -1,6 +1,5 @@
 package org.jetlinks.community.network.coap.device;
 
-import groovy.lang.Tuple;
 import lombok.extern.slf4j.Slf4j;
 import org.hswebframework.web.logger.ReactiveLogger;
 import org.jetlinks.community.gateway.AbstractDeviceGateway;
@@ -14,13 +13,15 @@ import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.device.DeviceRegistry;
 import org.jetlinks.core.device.LwM2MAuthenticationRequest;
 import org.jetlinks.core.device.session.DeviceSessionManager;
+import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.message.codec.Transport;
+import org.jetlinks.core.message.codec.lwm2m.LwM2MMessage;
 import org.jetlinks.supports.server.DecodedClientMessageHandler;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
@@ -94,17 +95,24 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                 error -> log.error(error.getMessage(), error)
             );
 
-        Disposable forObservationDisposable = server
-            .handleObservation()
-            .publishOn(Schedulers.boundedElastic())
-            .flatMap(message -> {
-                return message;
-            }, Integer.MAX_VALUE)
-            .subscribe(ignore -> {
-            }, error -> log.error(error.getMessage(), error));
+//        Disposable forObservationDisposable = ;
     }
 
-    private Mono<Tuple2<DeviceOperator, AuthenticationResponse>>    handleAuthRequest(LwM2MAuthenticationRequest authReq) {
+    //解码消息并处理
+    private Mono<Void> decodeAndHandleMessage(DeviceOperator operator,
+                                              LwM2MDeviceSession session,
+                                              LwM2MMessage message) {
+        return Mono.empty();
+    }
+
+    private Mono<DeviceMessage> handleMessage(DeviceOperator mainDevice, DeviceMessage message) {
+        return Mono.empty();
+    }
+
+    /**
+     * 处理设备认证请求
+     */
+    private Mono<Tuple3<DeviceOperator, AuthenticationResponse, LwM2MDeviceSession>> handleAuthRequest(LwM2MAuthenticationRequest authReq) {
         return Mono.empty();
     }
 
