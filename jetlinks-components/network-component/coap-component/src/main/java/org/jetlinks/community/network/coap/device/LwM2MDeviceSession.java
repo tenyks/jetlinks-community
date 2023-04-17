@@ -5,6 +5,7 @@ import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.message.codec.EncodedMessage;
 import org.jetlinks.core.message.codec.Transport;
+import org.jetlinks.core.message.codec.lwm2m.LwM2MDownlinkMessage;
 import org.jetlinks.core.server.session.DeviceSession;
 import reactor.core.publisher.Mono;
 
@@ -24,7 +25,7 @@ public class LwM2MDeviceSession implements DeviceSession {
 
     private final Registration registration;
 
-    private final Function<EncodedMessage, Mono<Boolean>> messageSender;
+    private final Function<LwM2MDownlinkMessage, Mono<Boolean>> messageSender;
 
     private long lastPingTime = System.currentTimeMillis();
 
@@ -33,7 +34,7 @@ public class LwM2MDeviceSession implements DeviceSession {
 
     public LwM2MDeviceSession(DeviceOperator deviceOperator,
                               Registration registration,
-                              Function<EncodedMessage, Mono<Boolean>> messageSender) {
+                              Function<LwM2MDownlinkMessage, Mono<Boolean>> messageSender) {
         this.operator = deviceOperator;
         this.registration = registration;
         this.messageSender = messageSender;
@@ -69,7 +70,7 @@ public class LwM2MDeviceSession implements DeviceSession {
     public Mono<Boolean> send(EncodedMessage encodedMessage) {
         //TODO 补充会话相关字段
 
-        return messageSender.apply(encodedMessage);
+        return messageSender.apply((LwM2MDownlinkMessage)encodedMessage);
     }
 
     @Override
@@ -96,6 +97,10 @@ public class LwM2MDeviceSession implements DeviceSession {
     public boolean isAlive() {
         return keepAliveTimeOutMs <= 0
             || System.currentTimeMillis() - lastPingTime < keepAliveTimeOutMs;
+    }
+
+    public Registration getRegistration() {
+        return registration;
     }
 
     @Override

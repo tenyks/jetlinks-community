@@ -56,7 +56,7 @@ public class LwM2MAuthorizer extends DefaultAuthorizer {
 
     @Override
     public Registration isAuthorized(UplinkRequest<?> request, Registration registration, Identity senderIdentity) {
-        _LwM2MAuthenticationRequest authReq = new _LwM2MAuthenticationRequest(registration);
+        _LwM2MAuthenticationRequest authReq = new _LwM2MAuthenticationRequest(request, registration);
         fluxSink.next(authReq);
 
         try {
@@ -67,17 +67,20 @@ public class LwM2MAuthorizer extends DefaultAuthorizer {
         }
     }
 
-    private static class _LwM2MAuthenticationRequest extends LwM2MAuthenticationRequest {
+    public static class _LwM2MAuthenticationRequest extends LwM2MAuthenticationRequest {
 
         private final CompletableFuture<Registration> resultFuture;
 
         private Registration      registration;
 
-        public _LwM2MAuthenticationRequest(Registration registration) {
+        public _LwM2MAuthenticationRequest(UplinkRequest<?> request, Registration registration) {
             super(registration.getEndpoint());
 
             this.registration = registration;
             this.resultFuture = new CompletableFuture<>();
+            if (registration.getAddress() != null) {
+                this.setClientAddress(registration.getAddress().toString());
+            }
         }
 
         public void complete(boolean accepted) {
@@ -86,6 +89,11 @@ public class LwM2MAuthorizer extends DefaultAuthorizer {
             } else {
                 this.resultFuture.complete(null);
             }
+        }
+
+        @Override
+        public Registration getRegistration() {
+            return registration;
         }
 
         public CompletableFuture<Registration> getResultFuture() {
