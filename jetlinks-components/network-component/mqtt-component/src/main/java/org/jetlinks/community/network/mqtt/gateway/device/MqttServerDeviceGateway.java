@@ -201,10 +201,11 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
             ;
     }
 
-    //处理认证结果
-    private Mono<Tuple3<MqttConnection, DeviceOperator, MqttConnectionSession>> handleAuthResponse(DeviceOperator device,
-                                                                                                   AuthenticationResponse resp,
-                                                                                                   MqttConnection connection) {
+    /**
+     * 处理认证结果
+     */
+    private Mono<Tuple3<MqttConnection, DeviceOperator, MqttConnectionSession>>
+    handleAuthResponse(DeviceOperator device, AuthenticationResponse resp, MqttConnection connection) {
         return Mono.defer(() -> {
                 String deviceId = device.getDeviceId();
                 //认证通过

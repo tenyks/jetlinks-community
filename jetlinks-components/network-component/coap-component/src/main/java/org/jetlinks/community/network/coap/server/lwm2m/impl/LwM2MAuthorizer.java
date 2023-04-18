@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 
+import javax.validation.constraints.Null;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -83,7 +84,8 @@ public class LwM2MAuthorizer extends DefaultAuthorizer {
             }
         }
 
-        public void complete(boolean accepted) {
+        @Override
+        public void complete(boolean accepted, @Null String message) {
             if (accepted) {
                 this.resultFuture.complete(registration);
             } else {

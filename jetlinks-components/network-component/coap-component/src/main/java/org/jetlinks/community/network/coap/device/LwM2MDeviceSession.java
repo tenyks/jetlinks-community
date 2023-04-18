@@ -6,9 +6,11 @@ import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.message.codec.EncodedMessage;
 import org.jetlinks.core.message.codec.Transport;
 import org.jetlinks.core.message.codec.lwm2m.LwM2MDownlinkMessage;
+import org.jetlinks.core.message.codec.lwm2m.SimpleLwM2MDownlinkMessage;
 import org.jetlinks.core.server.session.DeviceSession;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.function.Function;
@@ -25,6 +27,11 @@ public class LwM2MDeviceSession implements DeviceSession {
 
     private final Registration registration;
 
+    /**
+     * 设备注册时分配的标识，与会话标识等同
+     */
+    private final String        registrationId;
+
     private final Function<LwM2MDownlinkMessage, Mono<Boolean>> messageSender;
 
     private long lastPingTime = System.currentTimeMillis();
@@ -38,6 +45,16 @@ public class LwM2MDeviceSession implements DeviceSession {
         this.operator = deviceOperator;
         this.registration = registration;
         this.messageSender = messageSender;
+        this.registrationId = registration.getId();
+    }
+
+    public LwM2MDeviceSession(DeviceOperator deviceOperator,
+                              String registrationId,
+                              Function<LwM2MDownlinkMessage, Mono<Boolean>> messageSender) {
+        this.operator = deviceOperator;
+        this.messageSender = messageSender;
+        this.registrationId = registrationId;
+        this.registration = null;
     }
 
     @Override
@@ -69,8 +86,18 @@ public class LwM2MDeviceSession implements DeviceSession {
     @Override
     public Mono<Boolean> send(EncodedMessage encodedMessage) {
         //TODO 补充会话相关字段
+        if (!(encodedMessage instanceof LwM2MDownlinkMessage)) {
+            return Mono.just(false);
+        }
 
-        return messageSender.apply((LwM2MDownlinkMessage)encodedMessage);
+        LwM2MDownlinkMessage dlMsg = (LwM2MDownlinkMessage) encodedMessage;
+        if (dlMsg.getRegistrationId() == null) {
+            if (dlMsg instanceof SimpleLwM2MDownlinkMessage) {
+                ((SimpleLwM2MDownlinkMessage)dlMsg).setRegistrationId(registrationId);
+            }
+        }
+
+        return messageSender.apply(dlMsg);
     }
 
     @Override
@@ -99,8 +126,15 @@ public class LwM2MDeviceSession implements DeviceSession {
             || System.currentTimeMillis() - lastPingTime < keepAliveTimeOutMs;
     }
 
+    @Nullable
+    @Deprecated
     public Registration getRegistration() {
         return registration;
+    }
+
+    @Nonnull
+    public String getRegistrationId() {
+        return registrationId;
     }
 
     @Override

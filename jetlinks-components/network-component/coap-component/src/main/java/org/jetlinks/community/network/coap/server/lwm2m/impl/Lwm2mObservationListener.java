@@ -44,8 +44,6 @@ public class Lwm2mObservationListener implements ObservationListener {
      */
     @Override
     public void onResponse(Observation observation, Registration registration, ObserveResponse response) {
-        long startTime = System.currentTimeMillis();
-
         String  path = observation.getPath().toString();
         String  ep = registration.getEndpoint();
         LwM2mSingleResource content = (LwM2mSingleResource) response.getContent();
