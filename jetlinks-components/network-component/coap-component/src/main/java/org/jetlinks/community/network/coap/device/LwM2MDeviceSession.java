@@ -83,6 +83,10 @@ public class LwM2MDeviceSession implements DeviceSession {
         return lastPingTime;
     }
 
+    public Function<LwM2MDownlinkMessage, Mono<Boolean>> getMessageSender() {
+        return messageSender;
+    }
+
     @Override
     public Mono<Boolean> send(EncodedMessage encodedMessage) {
         //TODO 补充会话相关字段

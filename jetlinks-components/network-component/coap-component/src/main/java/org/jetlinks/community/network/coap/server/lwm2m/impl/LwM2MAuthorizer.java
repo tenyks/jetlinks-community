@@ -84,7 +84,6 @@ public class LwM2MAuthorizer extends DefaultAuthorizer {
             }
         }
 
-        @Override
         public void complete(boolean accepted, @Null String message) {
             if (accepted) {
                 this.resultFuture.complete(registration);

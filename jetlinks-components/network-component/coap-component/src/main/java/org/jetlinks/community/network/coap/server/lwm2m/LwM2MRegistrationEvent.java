@@ -11,6 +11,11 @@ public interface LwM2MRegistrationEvent {
     String  getEndpoint();
 
     /**
+     * @return  如果是更新在线的事件，返回之前的注册标识
+     */
+    String  getOldRegistrationId();
+
+    /**
      * @return  注册标识
      */
     String  getRegistrationId();

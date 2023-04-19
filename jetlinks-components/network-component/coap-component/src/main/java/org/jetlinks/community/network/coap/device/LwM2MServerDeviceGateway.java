@@ -24,7 +24,6 @@ import org.jetlinks.core.message.codec.FromDeviceMessageContext;
 import org.jetlinks.core.message.codec.Transport;
 import org.jetlinks.core.message.codec.lwm2m.LwM2MMessage;
 import org.jetlinks.core.server.session.DeviceSession;
-import org.jetlinks.core.server.session.KeepOnlineSession;
 import org.jetlinks.core.trace.DeviceTracer;
 import org.jetlinks.core.trace.FluxTracer;
 import org.jetlinks.core.trace.MonoTracer;
@@ -114,7 +113,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                 //暂停或者已停止时.
                 if (!isStarted()) {
                     //直接响应SERVER_UNAVAILABLE
-                    authReq.complete(false, "SERVER_UNAVAILABLE");
+                    authReq.reject("SERVER_UNAVAILABLE");
                     monitor.rejected();
                 }
 
@@ -202,18 +201,52 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
      * 处理设备注册相关事件，包括：设备上线、设备下线、会话更新等；
      */
     private Mono<Void> handleRegistrationEvent(LwM2MRegistrationEvent event) {
+        if (event.isOfOffline()) {
+            sessionPool.remove(event.getRegistrationId());
+            return Mono.empty();
+        }
+
+        if (event.isOfUpdate() && event.getRegistrationId() != null) {
+            LwM2MDeviceSession oldSession = null;
+            if (event.getOldRegistrationId() != null) {
+                oldSession = sessionPool.get(event.getOldRegistrationId());
+            }
+
+            if (!event.getRegistrationId().equals(event.getOldRegistrationId()) && oldSession != null) {
+                // 注册标识已经变更，更新会话对象
+                LwM2MDeviceSession newSession = new LwM2MDeviceSession(oldSession.getOperator(), event.getRegistrationId(), oldSession.getMessageSender());
+
+                sessionPool.put(event.getRegistrationId(), newSession);
+
+                return Mono.empty();
+            }
+
+            if (!sessionPool.containsKey(event.getRegistrationId())) {
+                // 确保新的注册标识对应的会话对象
+                return registry.getDevice(event.getEndpoint())
+                    .flatMap(device -> {
+                        LwM2MDeviceSession newSession = new LwM2MDeviceSession(device, event.getRegistrationId(), server::send);
+
+                        sessionPool.put(event.getRegistrationId(), newSession);
+                        return Mono.empty();
+                    })
+                    .switchIfEmpty(null);
+            }
+
+        }
+
         return Mono.empty();
     }
 
     /**
      * 处理设备认证请求
      */
-    private Mono<Tuple3<DeviceOperator, AuthenticationResponse, LwM2MDeviceSession>>
+    private Mono<Tuple3<DeviceOperator, AuthenticationResponse, LwM2MAuthenticationRequest>>
     handleAuthRequest(LwM2MAuthenticationRequest authReq) {
         //内存不够了
         if (SystemUtils.memoryIsOutOfWatermark()) {
             //直接拒绝
-            authReq.complete(false, "内存不够，直接拒绝");
+            authReq.reject("内存不够，直接拒绝");
             return Mono.empty();
         }
 
@@ -226,7 +259,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                 .defaultIfEmpty(Mono.defer(() -> registry.getDevice(authReq.getEndpoint()).flatMap(device -> device.authenticate(request))))
                 .flatMap(Function.identity())
                 //如果认证结果返回空,说明协议没有设置认证,或者认证返回不对, 默认返回BAD_USER_NAME_OR_PASSWORD,防止由于协议编写不当导致mqtt任意访问的安全问题.
-                .switchIfEmpty(Mono.fromRunnable(() -> request.complete(false, "默认返回BAD_USER_NAME_OR_PASSWORD"))))
+                .switchIfEmpty(Mono.fromRunnable(() -> request.reject("默认返回BAD_USER_NAME_OR_PASSWORD"))))
             .flatMap(resp -> {
                 //认证响应可以自定义设备ID,如果没有则使用请求URI中的ep参数
                 String deviceId = StringUtils.isEmpty(resp.getDeviceId()) ? authReq.getEndpoint() : resp.getDeviceId();
@@ -237,10 +270,10 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                     .map(operator -> {
                         LwM2MDeviceSession session = new LwM2MDeviceSession(operator, (Registration) authReq.getRegistration(), server::send);
 
-                        return Tuples.of(operator, resp, session);
+                        return Tuples.of(operator, resp, authReq);
                     })
                     //设备不存在,应答IDENTIFIER_REJECTED
-                    .switchIfEmpty(Mono.fromRunnable(() -> authReq.complete(false, "设备不存在, 应答IDENTIFIER_REJECTED")))
+                    .switchIfEmpty(Mono.fromRunnable(() -> authReq.reject("设备不存在, 应答IDENTIFIER_REJECTED")))
                     ;
             })
             .as(MonoTracer.create(DeviceTracer.SpanName.auth(authReq.getIdentity()),
@@ -263,7 +296,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                 log.error("LwM2M认证[{}]失败", authReq.getIdentity(), err);
                 //监控信息
                 monitor.rejected();
-                authReq.complete(false, "认证异常失败");
+                authReq.reject("认证异常失败");
             }))
             ;
     }
@@ -272,7 +305,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
      * 处理设备认证结果：创建设备会话，响应认证请求
      */
     private Mono<LwM2MDeviceSession>
-    handleAuthResponse(DeviceOperator device, AuthenticationResponse resp, Registration registration) {
+    handleAuthResponse(DeviceOperator device, AuthenticationResponse resp, LwM2MAuthenticationRequest authReq) {
         return Mono.defer(() -> {
             String deviceId = device.getDeviceId();
             //认证通过
@@ -281,44 +314,38 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
 
                 return sessionManager
                     .compute(deviceId, old -> {
-                        LwM2MDeviceSession newSession = new LwM2MDeviceSession(device, registration, server::send);
+                        LwM2MDeviceSession newSession = new LwM2MDeviceSession(device, (Registration) authReq.getRegistration(), server::send);
                         return old
                             .cast(LwM2MDeviceSession.class)
                             .<DeviceSession>map(session -> {
                                 sessionPool.put(session.getRegistrationId(), newSession);
                                 return newSession;
-                            }).defaultIfEmpty(newSession);
+                            })
+                            .defaultIfEmpty(newSession);
                     })
-                    .mapNotNull(session->{
-                        try {
-                            return Tuples.of(connection.accept(), device, session.unwrap(MqttConnectionSession.class));
-                        } catch (IllegalStateException ignore) {
-                            //忽略错误,偶尔可能会出现网络异常,导致accept时,连接已经中断.还有其他更好的处理方式?
-                            return null;
-                        }
-                    })
+                    .cast(LwM2MDeviceSession.class)
                     .doOnNext(o -> {
                         //监控信息
                         monitor.connected();
                         monitor.totalConnection(counter.sum());
                     })
                     //会话empty说明注册会话失败?
-                    .switchIfEmpty(Mono.fromRunnable(() -> connection.reject(MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED)))
-                    ;
+                    .switchIfEmpty(Mono.fromRunnable(() -> authReq.reject("CONNECTION_REFUSED_IDENTIFIER_REJECTED")));
             } else {
                 //认证失败返回 0x04 BAD_USER_NAME_OR_PASSWORD
-                connection.reject(MqttConnectReturnCode.CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD);
+                authReq.reject("CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD");
                 monitor.rejected();
                 log.warn("MQTT客户端认证[{}]失败:{}", deviceId, resp.getMessage());
             }
+
             return Mono.empty();
         })
-            .onErrorResume(error -> Mono.fromRunnable(() -> {
-                log.error(error.getMessage(), error);
-                monitor.rejected();
-                //发生错误时应答 SERVER_UNAVAILABLE
-                connection.reject(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
-            }));
+        .onErrorResume(error -> Mono.fromRunnable(() -> {
+            log.error(error.getMessage(), error);
+            monitor.rejected();
+            //发生错误时应答 SERVER_UNAVAILABLE
+            authReq.reject("CONNECTION_REFUSED_SERVER_UNAVAILABLE");
+        }));
     }
 
     @Override

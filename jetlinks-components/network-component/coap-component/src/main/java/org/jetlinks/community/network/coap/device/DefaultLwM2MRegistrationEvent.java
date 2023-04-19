@@ -8,29 +8,36 @@ public class DefaultLwM2MRegistrationEvent implements LwM2MRegistrationEvent {
 
     private String  registrationId;
 
+    private String  oldRegistrationId;
+
     private int     type;
 
-    private DefaultLwM2MRegistrationEvent(int type, String endpoint, String registrationId) {
+    private DefaultLwM2MRegistrationEvent(int type, String endpoint, String registrationId, String oldRegistrationId) {
         this.type = type;
         this.endpoint = endpoint;
         this.registrationId = registrationId;
     }
 
     public static DefaultLwM2MRegistrationEvent ofOnline(String endpoint, String registrationId) {
-        return new DefaultLwM2MRegistrationEvent(1, endpoint, registrationId);
+        return new DefaultLwM2MRegistrationEvent(1, endpoint, registrationId, null);
     }
 
-    public static DefaultLwM2MRegistrationEvent ofUpdate(String endpoint, String registrationId) {
-        return new DefaultLwM2MRegistrationEvent(9, endpoint, registrationId);
+    public static DefaultLwM2MRegistrationEvent ofUpdate(String endpoint, String registrationId, String oldRegistrationId) {
+        return new DefaultLwM2MRegistrationEvent(9, endpoint, registrationId, oldRegistrationId);
     }
 
     public static DefaultLwM2MRegistrationEvent ofOffline(String endpoint, String registrationId) {
-        return new DefaultLwM2MRegistrationEvent(0, endpoint, registrationId);
+        return new DefaultLwM2MRegistrationEvent(0, endpoint, registrationId, null);
     }
 
     @Override
     public String getEndpoint() {
         return endpoint;
+    }
+
+    @Override
+    public String getOldRegistrationId() {
+        return oldRegistrationId;
     }
 
     @Override
