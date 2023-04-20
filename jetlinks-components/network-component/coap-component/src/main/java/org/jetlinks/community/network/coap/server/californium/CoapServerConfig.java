@@ -14,7 +14,6 @@ import org.jetlinks.community.network.resource.NetworkTransport;
 @Setter
 @Builder
 @AllArgsConstructor
-
 public class CoapServerConfig extends AbstractServerNetworkConfig {
 
     @Override

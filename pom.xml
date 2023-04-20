@@ -301,18 +301,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.eclipse.californium</groupId>
-                <artifactId>californium-core</artifactId>
-                <version>${californium.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.eclipse.californium</groupId>
-                <artifactId>scandium</artifactId>
-                <version>${californium.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.eclipse.leshan</groupId>
                 <artifactId>leshan-server-cf</artifactId>
                 <version>${leshan-server-cf.version}</version>

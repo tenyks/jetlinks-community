@@ -62,13 +62,16 @@ public class DefaultLeShanLwM2MServerProvider implements NetworkProvider<LeShanL
     @Nonnull
     @Override
     public Mono<Network> createNetwork(@Nonnull LeShanLwM2MServerProperties properties) {
+        log.warn("Start LwM2M server[{}]", properties.getId());
+
         LeShanLwM2MServer server = new LeShanLwM2MServer(properties.getId(), RESPONSE_WAIT_TIME);
         return initServer(server, properties);
     }
 
     @Override
     public Mono<Network> reload(@Nonnull Network network, @Nonnull LeShanLwM2MServerProperties properties) {
-        log.debug("reload mqtt server[{}]", properties.getId());
+        log.warn("Reload LwM2M server[{}]", properties.getId());
+
         return initServer((LeShanLwM2MServer)network, properties);
     }
 
