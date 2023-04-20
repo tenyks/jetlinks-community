@@ -4,6 +4,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.leshan.server.registration.Registration;
 import org.hswebframework.web.logger.ReactiveLogger;
 import org.jetlinks.community.gateway.AbstractDeviceGateway;
@@ -24,12 +25,11 @@ import org.jetlinks.core.message.codec.FromDeviceMessageContext;
 import org.jetlinks.core.message.codec.Transport;
 import org.jetlinks.core.message.codec.lwm2m.LwM2MUplinkMessage;
 import org.jetlinks.core.server.session.DeviceSession;
+import org.jetlinks.core.server.session.KeepOnlineSession;
 import org.jetlinks.core.trace.DeviceTracer;
 import org.jetlinks.core.trace.FluxTracer;
 import org.jetlinks.core.trace.MonoTracer;
 import org.jetlinks.supports.server.DecodedClientMessageHandler;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.StringUtils;
 import reactor.core.Disposable;
 import reactor.core.Disposables;
 import reactor.core.publisher.Mono;
@@ -37,7 +37,6 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 
@@ -49,7 +48,7 @@ import java.util.function.Function;
  */
 @Slf4j
 public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
-    private static AttributeKey<String> clientId = AttributeKey.stringKey("clientId");
+    private static final AttributeKey<String> ENDPOINT = AttributeKey.stringKey("endpoint");
 
     final LwM2MServer server;
 
@@ -167,7 +166,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                 .cast(DeviceMessage.class)
                 .flatMap(msg -> {
                     //回填deviceId,有的场景协议包不能或者没有解析出deviceId,则直接使用连接对应的设备id进行填充.
-                    if (!StringUtils.hasText(msg.getDeviceId())) {
+                    if (!StringUtils.isNoneEmpty(msg.getDeviceId())) {
                         msg.thingId(DeviceThingType.device, session.getDeviceId());
                     }
                     return this.handleMessage((LwM2MDeviceSession) session, msg);
@@ -182,7 +181,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                     return Mono.empty();
                 })
                 .doOnComplete(() -> {
-                    //ACK
+                    //无需返回消息
                 })
             )
             .then();
@@ -209,10 +208,26 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
      * 处理设备注册相关事件，包括：设备上线、设备下线、会话更新等；
      */
     private Mono<Void> handleRegistrationEvent(LwM2MRegistrationEvent event) {
-//        if (event.isOfOffline()) {
-//            regId2DevIdIdx.remove(event.getRegistrationId());
-//            return Mono.empty();
-//        }
+        if (event.isOfOffline()) {
+            counter.decrement();
+
+            //监控信息
+            monitor.disconnected();
+            monitor.totalConnection(counter.sum());
+
+            String deviceId = event.getEndpoint();
+
+            return sessionManager
+                .getSession(deviceId, false)
+                .cast(LwM2MDeviceSession.class)
+                .flatMap(session -> {
+                    if (session.getRegistrationId().equals(event.getRegistrationId())) {
+                        return sessionManager.remove(deviceId, true).then();
+                    } else {
+                        return Mono.empty();
+                    }
+                });
+        }
 //
 //        if (event.isOfUpdate() && event.getRegistrationId() != null) {
 //            LwM2MDeviceSession oldSession = null;
@@ -267,7 +282,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                 .defaultIfEmpty(Mono.defer(() -> deviceRegistry.getDevice(authReq.getEndpoint()).flatMap(device -> device.authenticate(request))))
                 .flatMap(Function.identity())
                 //如果认证结果返回空,说明协议没有设置认证,或者认证返回不对, 默认返回BAD_USER_NAME_OR_PASSWORD,防止由于协议编写不当导致mqtt任意访问的安全问题.
-                .switchIfEmpty(Mono.fromRunnable(() -> request.reject("默认返回BAD_USER_NAME_OR_PASSWORD"))))
+                .switchIfEmpty(Mono.fromRunnable(() -> request.reject("BAD_USER_NAME_OR_PASSWORD"))))
             .flatMap(resp -> {
                 //认证响应可以自定义设备ID,如果没有则使用请求URI中的ep参数
                 String deviceId = StringUtils.isEmpty(resp.getDeviceId()) ? authReq.getEndpoint() : resp.getDeviceId();
@@ -275,11 +290,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                 //认证返回了新的设备ID,则使用新的设备
                 return deviceRegistry
                     .getDevice(deviceId)
-                    .map(operator -> {
-                        LwM2MDeviceSession session = new LwM2MDeviceSession(operator, (Registration) authReq.getRegistration(), server::send);
-
-                        return Tuples.of(operator, resp, authReq);
-                    })
+                    .map(operator -> Tuples.of(operator, resp, authReq))
                     //设备不存在,应答IDENTIFIER_REJECTED
                     .switchIfEmpty(Mono.fromRunnable(() -> authReq.reject("设备不存在, 应答IDENTIFIER_REJECTED")))
                     ;
@@ -297,8 +308,9 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                         span.setStatus(StatusCode.ERROR, "device not exists");
                     }
                     span.setAttribute(DeviceTracer.SpanKey.address, authReq.getClientAddress());
-                    span.setAttribute(clientId, authReq.getIdentity());
-                }))
+                    span.setAttribute(ENDPOINT, authReq.getEndpoint());
+                })
+            )
             //设备认证异常,拒绝连接
             .onErrorResume((err) -> Mono.fromRunnable(() -> {
                 log.error("LwM2M认证[{}]失败", authReq.getIdentity(), err);
@@ -316,8 +328,8 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
     handleAuthResponse(DeviceOperator device, AuthenticationResponse resp, LwM2MAuthenticationRequest authReq) {
         return Mono.defer(() -> {
             String deviceId = device.getDeviceId();
-            //认证通过
             if (resp.isSuccess()) {
+                //认证通过
                 counter.increment();
 
                 return sessionManager
@@ -338,7 +350,8 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                         monitor.totalConnection(counter.sum());
                     })
                     //会话empty说明注册会话失败?
-                    .switchIfEmpty(Mono.fromRunnable(() -> authReq.reject("CONNECTION_REFUSED_IDENTIFIER_REJECTED")));
+                    .switchIfEmpty(Mono.fromRunnable(() -> authReq.reject("CONNECTION_REFUSED_IDENTIFIER_REJECTED")))
+                    ;
             } else {
                 //认证失败返回 0x04 BAD_USER_NAME_OR_PASSWORD
                 authReq.reject("CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD");
