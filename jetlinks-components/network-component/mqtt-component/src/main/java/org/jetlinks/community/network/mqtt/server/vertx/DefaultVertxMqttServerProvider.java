@@ -88,7 +88,6 @@ public class DefaultVertxMqttServerProvider implements NetworkProvider<VertxMqtt
     @Nullable
     @Override
     public ConfigMetadata getConfigMetadata() {
-
         return new DefaultConfigMetadata()
             .add("id", "id", "", new StringType())
             .add("host", "本地地址", "", new StringType())

@@ -69,7 +69,7 @@ device:
       time-series:
         enabled: true #对设备数据进行持久化
 captcha:
-  enabled: false # 开启验证码
+  enabled: true # 开启验证码
   ttl: 2m #验证码过期时间,2分钟
 hsweb:
   cors:
@@ -91,12 +91,12 @@ hsweb:
       enabled: true #开启响应包装器(将返回值包装为ResponseMessage)
       excludes: # 这下包下的接口不包装
         - org.springdoc
-  #  auth:   #默认的用户配置
-  #    users:
-  #      admin:
-  #        username: admin
-  #        password: admin
-  #        name: 超级管理员
+  auth:   #默认的用户配置
+    users:
+      admin:
+        username: admin
+        password: admin
+        name: 超级管理员
   authorize:
     auto-parse: true
   permission:
@@ -221,3 +221,4 @@ springdoc:
 network:
   resources:
     - 5900-5910
+    - 5680-5689

@@ -31,7 +31,7 @@ import java.util.List;
 public class DefaultLeShanLwM2MServerProvider implements NetworkProvider<LeShanLwM2MServerProperties> {
 
     private static final String[] MODEL_PATHS = new String[]{
-        "19.mxl"
+        "19.xml"
     };
 
     /**
@@ -62,17 +62,26 @@ public class DefaultLeShanLwM2MServerProvider implements NetworkProvider<LeShanL
     @Nonnull
     @Override
     public Mono<Network> createNetwork(@Nonnull LeShanLwM2MServerProperties properties) {
-        log.warn("Start LwM2M server[{}]", properties.getId());
+        log.info("Start LwM2M server[{}]", properties.getId());
 
         LeShanLwM2MServer server = new LeShanLwM2MServer(properties.getId(), RESPONSE_WAIT_TIME);
-        return initServer(server, properties);
+        return initServer(server, properties)
+            .doOnSuccess(t -> {
+                log.info("Start LwM2M server[{}] success.", properties.getId());
+            });
     }
 
     @Override
     public Mono<Network> reload(@Nonnull Network network, @Nonnull LeShanLwM2MServerProperties properties) {
-        log.warn("Reload LwM2M server[{}]", properties.getId());
+        log.info("Reload LwM2M server[{}]", properties.getId());
 
-        return initServer((LeShanLwM2MServer)network, properties);
+        LeShanLwM2MServer lsServer = (LeShanLwM2MServer) network;
+        if (lsServer.isAlive()) return Mono.just(network);
+
+        return initServer(lsServer, properties)
+            .doOnSuccess(t -> {
+                log.info("Reload LwM2M server[{}] success.", properties.getId());
+            });
     }
 
     @Override
@@ -90,7 +99,7 @@ public class DefaultLeShanLwM2MServerProvider implements NetworkProvider<LeShanL
             .add("publicHost", "公网地址", "", new StringType())
             .add("publicPort", "公网端口", "", new IntType())
             .add("certId", "证书id", "", new StringType())
-            .add("secure", "开启TSL", "", new BooleanType())
+            .add("secure", "开启DTSL", "", new BooleanType())
             .add("maxMessageSize", "最大消息长度", "", new StringType());
     }
 
@@ -106,32 +115,36 @@ public class DefaultLeShanLwM2MServerProvider implements NetworkProvider<LeShanL
     }
 
     private Mono<Network>  initServer(LeShanLwM2MServer server, LeShanLwM2MServerProperties properties) {
-        // 初始化lwm2m服务端
-        LeshanServerBuilder builder = new LeshanServerBuilder();
-        builder.setLocalAddress(properties.getHost(), properties.getPort());
-        builder.setCoapConfig(LeshanServerBuilder.createDefaultNetworkConfig());
+        return Mono.defer(() -> {
+            // 初始化lwm2m服务端
+            LeshanServerBuilder builder = new LeshanServerBuilder();
+            builder.setLocalAddress(properties.getHost(), properties.getPort());
+            builder.setCoapConfig(LeshanServerBuilder.createDefaultNetworkConfig());
 
-        // 可支持的object模型
-        List<ObjectModel> models = ObjectLoader.loadAllDefault();
-        models.addAll(ObjectLoader.loadDdfResources("/models/", MODEL_PATHS));
-        LwM2mModelProvider modelProvider = new VersionedModelProvider(models);
-        builder.setObjectModelProvider(modelProvider);
+            // 可支持的object模型
+            List<ObjectModel> models = ObjectLoader.loadAllDefault();
+            models.addAll(ObjectLoader.loadDdfResources("/models/", MODEL_PATHS));
+            LwM2mModelProvider modelProvider = new VersionedModelProvider(models);
+            builder.setObjectModelProvider(modelProvider);
 
-        // lwm2m协议设备注册标识生成器
-        builder.setRegistrationIdProvider(new Lwm2mRegistrationIdProvider());
+            // lwm2m协议设备注册标识生成器
+            builder.setRegistrationIdProvider(new Lwm2mRegistrationIdProvider());
 
-        // 设置授权认证
-        builder.setAuthorizer(server.buildAndBindAuthorizer(securityStore, deviceRegistry));
-        LeshanServer lsServer = builder.build();
+            // 设置授权认证
+            builder.setAuthorizer(server.buildAndBindAuthorizer(securityStore, deviceRegistry));
+            LeshanServer lsServer = builder.build();
 
-        // 设置监听器
-        lsServer.getRegistrationService().addListener(server.buildAndBindRegistrationListener());
-        lsServer.getPresenceService().addListener(server.buildAndBindPresenceListener());
-        lsServer.getObservationService().addListener(server.buildAndBindObservationListener());
+            // 设置监听器
+            lsServer.getRegistrationService().addListener(server.buildAndBindRegistrationListener());
+            lsServer.getPresenceService().addListener(server.buildAndBindPresenceListener());
+            lsServer.getObservationService().addListener(server.buildAndBindObservationListener());
 
-        server.setLeShanServer(lsServer);
-        server.setBindAddress(new InetSocketAddress(properties.getHost(), properties.getPort()));
+            server.setLeShanServer(lsServer);
+            server.setBindAddress(new InetSocketAddress(properties.getHost(), properties.getPort()));
 
-        return Mono.just(server);
+            server.startUp();
+
+            return Mono.just(server);
+        });
     }
 }

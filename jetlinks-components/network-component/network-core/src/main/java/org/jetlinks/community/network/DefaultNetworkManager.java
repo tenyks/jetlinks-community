@@ -170,7 +170,6 @@ public class DefaultNetworkManager implements NetworkManager, BeanPostProcessor,
     @Override
     public Mono<Void> reload(NetworkType type, String id) {
         return doReload(type.getId(), id);
-
     }
 
     @Override

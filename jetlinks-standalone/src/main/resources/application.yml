@@ -72,7 +72,7 @@ device:
       time-series:
         enabled: true #对设备数据进行持久化
 captcha:
-  enabled: false # 开启验证码
+  enabled: true # 开启验证码
   ttl: 2m #验证码过期时间,2分钟
 hsweb:
   cors:

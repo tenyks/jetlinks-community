@@ -180,15 +180,19 @@ public class LeShanLwM2MServer implements LwM2MServer {
 
     @Override
     public void shutdown() {
-        if (server == null) return ;
+        if (server == null) {
+            log.warn("LwM2M server [{}] has been closed", id);
+            return ;
+        }
 
         server.destroy();
+
         server = null;
         authorizer = null;
         observationListener = null;
         registrationListener = null;
 
-        log.debug("LwM2M server [{}] closed", id);
+        log.warn("LwM2M server [{}] closed", id);
     }
 
     @Override
