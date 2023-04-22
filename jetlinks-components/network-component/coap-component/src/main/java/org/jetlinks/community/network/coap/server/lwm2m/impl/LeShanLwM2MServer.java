@@ -7,9 +7,11 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.californium.core.coap.Response;
 import org.eclipse.leshan.core.request.ExecuteRequest;
+import org.eclipse.leshan.core.request.ObserveRequest;
 import org.eclipse.leshan.core.request.exception.*;
 import org.eclipse.leshan.core.response.ErrorCallback;
 import org.eclipse.leshan.core.response.ExecuteResponse;
+import org.eclipse.leshan.core.response.LwM2mResponse;
 import org.eclipse.leshan.core.response.ResponseCallback;
 import org.eclipse.leshan.core.util.Hex;
 import org.eclipse.leshan.server.californium.LeshanServer;
@@ -107,21 +109,34 @@ public class LeShanLwM2MServer implements LwM2MServer {
             return Mono.error(new IllegalStateException("会话已过期或设备已离线[0x05LSLMS9381]"));
         }
 
-        return Mono.fromCallable(() -> {
-            String payload = Hex.encodeHexString(message.getPayload().array());
-            final ExecuteRequest request = new ExecuteRequest(message.getObjectAndResource().getPath(), payload);
+        if (message.getObjectAndResource().codeOfObservation()) {
+            return Mono.fromCallable(() -> {
+                final ObserveRequest request = new ObserveRequest(message.getObjectAndResource().getPath());
 
-            server.send(registration, request, responseWaitTime,
-                        buildResponseCallback(message), buildErrorCallback(message));
+                server.send(registration, request, responseWaitTime,
+                            buildResponseCallback(message), buildErrorCallback(message));
 
-            return true;
-        });
+                return true;
+            });
+        } else if(message.getObjectAndResource().codeOfExecute()){
+            return Mono.fromCallable(() -> {
+                String payload = Hex.encodeHexString(message.getPayload().array());
+                final ExecuteRequest request = new ExecuteRequest(message.getObjectAndResource().getPath(), payload);
+
+                server.send(registration, request, responseWaitTime,
+                    buildResponseCallback(message), buildErrorCallback(message));
+
+                return true;
+            });
+        }
+
+        return Mono.just(false);
     }
 
-    private ResponseCallback<ExecuteResponse> buildResponseCallback(LwM2MDownlinkMessage message) {
-        return new ResponseCallback<ExecuteResponse>() {
+    private <T extends LwM2mResponse> ResponseCallback<T> buildResponseCallback(LwM2MDownlinkMessage message) {
+        return new ResponseCallback<T>() {
             @Override
-            public void onResponse(ExecuteResponse response) {
+            public void onResponse(T response) {
                 SimpleLwM2MUplinkMessage replyMessage = new SimpleLwM2MUplinkMessage();
                 Response coapResponse = (Response) response.getCoapResponse();
                 replyMessage.setMessageId(coapResponse.getMID());

@@ -1,5 +1,7 @@
 package org.jetlinks.community.network.coap.device;
 
+import org.jetlinks.community.network.coap.server.lwm2m.LwM2MServer;
+import org.jetlinks.core.ProtocolSupport;
 import org.jetlinks.core.ProtocolSupports;
 import org.jetlinks.core.device.DeviceRegistry;
 import org.jetlinks.core.device.session.DeviceSessionManager;
@@ -13,10 +15,13 @@ import org.jetlinks.community.network.NetworkManager;
 import org.jetlinks.community.network.NetworkType;
 import org.jetlinks.community.network.coap.server.coap.CoapServer;
 import org.jetlinks.supports.server.DecodedClientMessageHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.Objects;
 
 /**
@@ -25,7 +30,9 @@ import java.util.Objects;
  *  @version 1.0
  */
 @Component
-public class CoapServerDeviceGatewayProvider implements DeviceGatewayProvider {
+public class LwM2MServerDeviceGatewayProvider implements DeviceGatewayProvider {
+
+    private static final Logger log = LoggerFactory.getLogger(LwM2MServerDeviceGatewayProvider.class);
 
     private final NetworkManager networkManager;
 
@@ -38,11 +45,11 @@ public class CoapServerDeviceGatewayProvider implements DeviceGatewayProvider {
     private final ProtocolSupports protocolSupports;
 
 
-    public CoapServerDeviceGatewayProvider(NetworkManager networkManager,
-                                           DeviceRegistry registry,
-                                           DeviceSessionManager sessionManager,
-                                           DecodedClientMessageHandler messageHandler,
-                                           ProtocolSupports protocolSupports) {
+    public LwM2MServerDeviceGatewayProvider(NetworkManager networkManager,
+                                            DeviceRegistry registry,
+                                            DeviceSessionManager sessionManager,
+                                            DecodedClientMessageHandler messageHandler,
+                                            ProtocolSupports protocolSupports) {
         this.networkManager = networkManager;
         this.registry = registry;
         this.sessionManager = sessionManager;
@@ -52,38 +59,47 @@ public class CoapServerDeviceGatewayProvider implements DeviceGatewayProvider {
 
     @Override
     public String getId() {
-        return "coap-server-gateway";
+        return "lwm2m-server-gateway";
     }
 
     @Override
     public String getName() {
-        return "Coap透传接入";
+        return "LwM2M直连接入";
     }
 
     public NetworkType getNetworkType() {
-        return DefaultNetworkType.TCP_SERVER;
+        return DefaultNetworkType.LWM2M_SERVER;
     }
 
     public Transport getTransport() {
-        return DefaultTransport.TCP;
+        return DefaultTransport.CoAP;
+    }
+
+    @Override
+    public int getOrder() {
+        return 2;
     }
 
     @Override
     public Mono<DeviceGateway> createDeviceGateway(DeviceGatewayProperties properties) {
+        log.info("[LwM2MGateway]即将创建协议网关..., properties={}", properties);
+
         return networkManager
-            .<CoapServer>getNetwork(getNetworkType(), properties.getChannelId())
-            .map(tcpServer -> {
+            .<LwM2MServer>getNetwork(getNetworkType(), properties.getChannelId())
+            .map(server -> {
                 String protocol = properties.getProtocol();
 
                 Assert.hasText(protocol, "protocol can not be empty");
 
-                return new CoapServerDeviceGateway(
+                ProtocolSupport ps = protocolSupports.getProtocol(protocol).block(Duration.ofSeconds(5));
+
+                return new LwM2MServerDeviceGateway(
                     properties.getId(),
-                    Mono.defer(() -> protocolSupports.getProtocol(protocol)),
+                    Mono.just(ps),
                     registry,
                     messageHandler,
                     sessionManager,
-                    tcpServer
+                    server
                 );
             });
     }
@@ -91,17 +107,20 @@ public class CoapServerDeviceGatewayProvider implements DeviceGatewayProvider {
     @Override
     public Mono<? extends DeviceGateway> reloadDeviceGateway(DeviceGateway gateway,
                                                              DeviceGatewayProperties properties) {
-        CoapServerDeviceGateway deviceGateway = ((CoapServerDeviceGateway) gateway);
+        log.info("[LwM2MGateway]即将创建协议网关..., properties={}", properties);
+
+        LwM2MServerDeviceGateway deviceGateway = ((LwM2MServerDeviceGateway) gateway);
         //网络组件发生变化
-        if (!Objects.equals(deviceGateway.coapServer.getId(), properties.getChannelId())) {
+        if (!Objects.equals(deviceGateway.getId(), properties.getChannelId())) {
             return gateway
                 .shutdown()
                 .then(this.createDeviceGateway(properties))
                 .flatMap(newer -> newer.startup().thenReturn(newer));
         }
+
         //更新协议
         String protocol = properties.getProtocol();
-        deviceGateway.protocol = Mono.defer(() -> protocolSupports.getProtocol(protocol));
+        deviceGateway.setCustProtocol(Mono.defer(() -> protocolSupports.getProtocol(protocol)));
 
         return Mono.just(gateway);
     }

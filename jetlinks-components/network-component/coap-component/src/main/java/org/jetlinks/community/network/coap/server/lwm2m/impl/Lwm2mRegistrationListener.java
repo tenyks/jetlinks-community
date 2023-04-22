@@ -21,7 +21,7 @@ import java.util.Collection;
  */
 public class Lwm2mRegistrationListener implements RegistrationListener {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger log = LoggerFactory.getLogger(Lwm2mRegistrationListener.class);
 
     private Flux<LwM2MRegistrationEvent>    regEventFlux;
 
@@ -37,23 +37,21 @@ public class Lwm2mRegistrationListener implements RegistrationListener {
 
     @Override
     public void registered(Registration registration, Registration previousReg, Collection<Observation> collection) {
-        // 转换为设备编码
-        String deviceSn = Lwm2mRegistrationIdProvider.buildRegId(registration.getEndpoint());
-
         // 发送设备上线通知开始
-        logger.debug("lwm2m online message {} messageArrived, send message success", deviceSn);
+        log.debug("[LwM2M]online message: reg={}", registration);
 
-//        cmdSvc.sendLwM2mCmd(registration, Lwm2mConstant.Path.Path_19_0_0, Lwm2mConstant.CMD_TYPE.OBSERVE, null);
-
-        LwM2MRegistrationEvent event = DefaultLwM2MRegistrationEvent.ofOnline(registration.getEndpoint(), registration.getId());
+        String endpoint = Lwm2mRegistrationIdProvider.normalizeEndpoint(registration.getEndpoint());
+        LwM2MRegistrationEvent event = DefaultLwM2MRegistrationEvent.ofOnline(endpoint, registration.getId());
         regEventFluxSink.next(event);
     }
 
     @Override
     public void updated(RegistrationUpdate update, Registration updatedRegistration, Registration previousRegistration) {
-        logger.info("device [{}] updated", updatedRegistration.getEndpoint());
+        log.debug("[LwM2M]Registration updated: reg={}", updatedRegistration);
 
-        LwM2MRegistrationEvent event = DefaultLwM2MRegistrationEvent.ofOnline(updatedRegistration.getEndpoint(), updatedRegistration.getId());
+        String endpoint = Lwm2mRegistrationIdProvider.normalizeEndpoint(updatedRegistration.getEndpoint());
+        LwM2MRegistrationEvent event = DefaultLwM2MRegistrationEvent.ofUpdate(endpoint, updatedRegistration.getId(),
+                                                (previousRegistration != null ? previousRegistration.getId() : null));
         regEventFluxSink.next(event);
     }
 
@@ -61,9 +59,10 @@ public class Lwm2mRegistrationListener implements RegistrationListener {
     public void unregistered(Registration registration, Collection<Observation> observations, boolean expired,
                              Registration newReg) {
         // 设备下线通知
-        logger.debug("lwm2m offline message {} messageArrived, send message success", registration.getEndpoint());
+        log.debug("[LwM2M]offline message: reg={}", registration);
 
-        LwM2MRegistrationEvent event = DefaultLwM2MRegistrationEvent.ofOnline(registration.getEndpoint(), registration.getId());
+        String endpoint = Lwm2mRegistrationIdProvider.normalizeEndpoint(registration.getEndpoint());
+        LwM2MRegistrationEvent event = DefaultLwM2MRegistrationEvent.ofOffline(endpoint, registration.getId());
         regEventFluxSink.next(event);
     }
 }

@@ -62,7 +62,7 @@ public class DefaultLeShanLwM2MServerProvider implements NetworkProvider<LeShanL
     @Nonnull
     @Override
     public Mono<Network> createNetwork(@Nonnull LeShanLwM2MServerProperties properties) {
-        log.info("Start LwM2M server[{}]", properties.getId());
+        log.info("Start LwM2M server[{}]: {}", properties.getId(), properties);
 
         LeShanLwM2MServer server = new LeShanLwM2MServer(properties.getId(), RESPONSE_WAIT_TIME);
         return initServer(server, properties)
@@ -73,7 +73,9 @@ public class DefaultLeShanLwM2MServerProvider implements NetworkProvider<LeShanL
 
     @Override
     public Mono<Network> reload(@Nonnull Network network, @Nonnull LeShanLwM2MServerProperties properties) {
-        log.info("Reload LwM2M server[{}]", properties.getId());
+        log.info("Reload LwM2M server[{}]: {}", properties.getId(), properties);
+
+        //ISSUE 发现在界面触发启动组件时：controller -> createNetwork()，状态变更事件->reload()，需要确认是否实现正确
 
         LeShanLwM2MServer lsServer = (LeShanLwM2MServer) network;
         if (lsServer.isAlive()) return Mono.just(network);

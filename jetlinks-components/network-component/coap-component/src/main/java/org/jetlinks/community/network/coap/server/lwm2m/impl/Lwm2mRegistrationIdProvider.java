@@ -33,11 +33,24 @@ public class Lwm2mRegistrationIdProvider implements RegistrationIdProvider {
     public static String extractEndpointName(String regId) {
         if (!regId.startsWith("SSID:") || regId.length() < 13) return null;
 
-        return regId.substring(5, regId.length() - 7);
+        return regId.substring(5, regId.length() - 8);
+    }
+
+    /**
+     * 请求中的ep参数标准化：移除';'后的参数
+     */
+    public static String normalizeEndpoint(String endpoint) {
+        int idx = endpoint.indexOf(';');
+        if (idx >= 0) {
+            return endpoint.substring(0, idx);
+        }
+
+        return endpoint;
     }
 
     public static String buildRegId(String endpointName) {
-        return String.format("SSID:%s:%07d", endpointName, Rand.nextInt() % 10000000);
+        String ep = normalizeEndpoint(endpointName);
+        return String.format("SSID:%s:%07d", ep, Math.abs(Rand.nextInt() % 10000000));
     }
 
 }

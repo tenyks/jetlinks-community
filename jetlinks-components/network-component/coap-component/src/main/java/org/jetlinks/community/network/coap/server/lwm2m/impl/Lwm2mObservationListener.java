@@ -3,6 +3,8 @@ package org.jetlinks.community.network.coap.server.lwm2m.impl;
 
 import io.netty.buffer.Unpooled;
 import org.eclipse.californium.core.coap.Response;
+import org.eclipse.leshan.core.node.LwM2mNode;
+import org.eclipse.leshan.core.node.LwM2mObjectInstance;
 import org.eclipse.leshan.core.node.LwM2mSingleResource;
 import org.eclipse.leshan.core.observation.Observation;
 import org.eclipse.leshan.core.response.ObserveResponse;
@@ -45,8 +47,16 @@ public class Lwm2mObservationListener implements ObservationListener {
     @Override
     public void onResponse(Observation observation, Registration registration, ObserveResponse response) {
         String  path = observation.getPath().toString();
-        String  ep = registration.getEndpoint();
-        LwM2mSingleResource content = (LwM2mSingleResource) response.getContent();
+        String  ep = Lwm2mRegistrationIdProvider.normalizeEndpoint(registration.getEndpoint());
+
+        LwM2mNode contentNode = response.getContent();
+
+        if (contentNode instanceof LwM2mObjectInstance || path.equals(LwM2MResource.BinaryAppDataContainerReportRoot.getPath())) {
+           logger.warn("[LwM2M]忽略消息：{}", observation);
+           return ;
+        }
+
+        Object contentObj = ((LwM2mSingleResource) contentNode).getValue();
 
         SimpleLwM2MUplinkMessage message = new SimpleLwM2MUplinkMessage();
 
@@ -54,7 +64,7 @@ public class Lwm2mObservationListener implements ObservationListener {
 
         //TODO 根据observation.path确定是哪种资源
         message.setResource(LwM2MResource.BinaryAppDataContainerReport);
-        message.setPayload(Unpooled.wrappedBuffer((byte[]) content.getValue()));
+        message.setPayload(Unpooled.wrappedBuffer((byte[]) contentObj));
         message.setMessageId(coapRsp.getMID());
         message.setRegistrationId(registration.getId());
 

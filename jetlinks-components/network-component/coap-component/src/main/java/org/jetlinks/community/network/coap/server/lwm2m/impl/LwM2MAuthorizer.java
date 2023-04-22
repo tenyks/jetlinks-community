@@ -75,7 +75,7 @@ public class LwM2MAuthorizer extends DefaultAuthorizer {
         private Registration      registration;
 
         public _LwM2MAuthenticationRequest(UplinkRequest<?> request, Registration registration) {
-            super(registration.getEndpoint());
+            super(Lwm2mRegistrationIdProvider.normalizeEndpoint(registration.getEndpoint()));
 
             this.registration = registration;
             this.resultFuture = new CompletableFuture<>();

@@ -65,6 +65,7 @@ public class DefaultLwM2MRegistrationEvent implements LwM2MRegistrationEvent {
         return "DefaultLwM2MRegistrationEvent{" +
             "endpoint='" + endpoint + '\'' +
             ", registrationId='" + registrationId + '\'' +
+            ", oldRegistrationId='" + oldRegistrationId + '\'' +
             ", type=" + type +
             '}';
     }

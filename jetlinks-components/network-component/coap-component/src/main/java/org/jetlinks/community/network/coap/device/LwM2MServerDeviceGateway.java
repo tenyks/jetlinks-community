@@ -1,5 +1,7 @@
 package org.jetlinks.community.network.coap.device;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;
 import lombok.SneakyThrows;
@@ -23,7 +25,7 @@ import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.message.codec.FromDeviceMessageContext;
 import org.jetlinks.core.message.codec.Transport;
-import org.jetlinks.core.message.codec.lwm2m.LwM2MUplinkMessage;
+import org.jetlinks.core.message.codec.lwm2m.*;
 import org.jetlinks.core.server.session.DeviceSession;
 import org.jetlinks.core.server.session.KeepOnlineSession;
 import org.jetlinks.core.trace.DeviceTracer;
@@ -37,6 +39,7 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 
@@ -55,7 +58,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
     /**
      * 定制协议
      */
-    private final Mono<ProtocolSupport> custProtocol;
+    private Mono<ProtocolSupport> custProtocol;
 
     private final DeviceRegistry deviceRegistry;
 
@@ -89,6 +92,10 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
 
     public Mono<ProtocolSupport> getCustProtocol() {
         return custProtocol;
+    }
+
+    public void setCustProtocol(Mono<ProtocolSupport> custProtocol) {
+        this.custProtocol = custProtocol;
     }
 
     public Transport getTransport() {
@@ -157,33 +164,37 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
 
         return sessionManager
             .getSession(deviceId)
-            .flatMapMany(session -> session
-                .getOperator()
-                .getProtocol()
-                .flatMap(protocol -> protocol.getMessageCodec(getTransport()))
-                //解码
-                .flatMapMany(codec -> codec.decode(FromDeviceMessageContext.of(session, message, deviceRegistry)))
-                .cast(DeviceMessage.class)
-                .flatMap(msg -> {
-                    //回填deviceId,有的场景协议包不能或者没有解析出deviceId,则直接使用连接对应的设备id进行填充.
-                    if (!StringUtils.isNoneEmpty(msg.getDeviceId())) {
-                        msg.thingId(DeviceThingType.device, session.getDeviceId());
-                    }
-                    return this.handleMessage((LwM2MDeviceSession) session, msg);
-                })
-                .as(FluxTracer
-                    .create(DeviceTracer.SpanName.decode(session.getDeviceId()),
-                        (span, msg) -> span.setAttribute(DeviceTracer.SpanKey.message, toJsonString(msg.toJson())))
-                )
-                //发生错误不中断流
-                .onErrorResume((err) -> {
-                    log.error("handle mqtt message [{}] error:{}", session.getDeviceId(), message, err);
-                    return Mono.empty();
-                })
-                .doOnComplete(() -> {
-                    //无需返回消息
-                })
-            )
+            .flatMapMany(session -> {
+                ((SimpleLwM2MUplinkMessage)message).setDeviceId(session.getDeviceId());
+
+                return session
+                        .getOperator()
+                        .getProtocol()
+                        .flatMap(protocol -> protocol.getMessageCodec(getTransport()))
+                        /*解码*/
+                        .flatMapMany(codec -> codec.decode(FromDeviceMessageContext.of(session, message, deviceRegistry)))
+                        .cast(DeviceMessage.class)
+                        .flatMap(msg -> {
+                            //回填deviceId,有的场景协议包不能或者没有解析出deviceId,则直接使用连接对应的设备id进行填充.
+                            if (!StringUtils.isNoneEmpty(msg.getDeviceId())) {
+                                msg.thingId(DeviceThingType.device, session.getDeviceId());
+                            }
+                            return handleMessage((LwM2MDeviceSession) session, msg);
+                        })
+                        .as(FluxTracer
+                            .create(DeviceTracer.SpanName.decode(session.getDeviceId()),
+                                (span, msg) -> span.setAttribute(DeviceTracer.SpanKey.message, toJsonString(msg.toJson())))
+                        )
+                        //发生错误不中断流
+                        .onErrorResume((err) -> {
+                            log.error("handle mqtt message [{}] error:{}", session.getDeviceId(), message, err);
+                            return Mono.empty();
+                        })
+                        .doOnComplete(() -> {
+                            //无需返回消息
+                        })
+                    ;
+            })
             .then();
     }
 
@@ -208,6 +219,31 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
      * 处理设备注册相关事件，包括：设备上线、设备下线、会话更新等；
      */
     private Mono<Void> handleRegistrationEvent(LwM2MRegistrationEvent event) {
+        log.info("[LwM2M]设备上下线事件：{}", event);
+
+        if (event.isOfOnline()) {
+            // 默认向设备发送Observe /19/0/0的指令
+            SimpleLwM2MDownlinkMessage observeMsg = new SimpleLwM2MDownlinkMessage();
+            observeMsg.setResource(LwM2MResource.BinaryAppDataContainerReport);
+            observeMsg.setRegistrationId(event.getRegistrationId());
+            observeMsg.setPayload(Unpooled.EMPTY_BUFFER);
+
+            return server.send(observeMsg)
+//                    .delayElement(Duration.ofSeconds(3))
+//                    .flatMap(flag -> {
+//                        if (flag) {
+//                            SimpleLwM2MDownlinkMessage observeMsg2 = new SimpleLwM2MDownlinkMessage();
+//                            observeMsg2.setResource(LwM2MResource.BinaryAppDataContainerReportRoot);
+//                            observeMsg2.setRegistrationId(event.getRegistrationId());
+//                            observeMsg2.setPayload(Unpooled.EMPTY_BUFFER);
+//
+//                            return server.send(observeMsg2);
+//                        } else {
+//                            return Mono.empty();
+//                        }
+//                    })
+                    .then();
+        }
         if (event.isOfOffline()) {
             counter.decrement();
 
@@ -276,6 +312,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
         return Mono
             .justOrEmpty(authReq)
             .flatMap(request -> custProtocol
+                .publishOn(Schedulers.boundedElastic())
                 //使用自定义协议来认证
                 .map(support -> support.authenticate(request, deviceRegistry))
                 //没有指定自定义协议,则使用endpoint对应的设备进行认证.
@@ -284,6 +321,8 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                 //如果认证结果返回空,说明协议没有设置认证,或者认证返回不对, 默认返回BAD_USER_NAME_OR_PASSWORD,防止由于协议编写不当导致mqtt任意访问的安全问题.
                 .switchIfEmpty(Mono.fromRunnable(() -> request.reject("BAD_USER_NAME_OR_PASSWORD"))))
             .flatMap(resp -> {
+                log.info("[LwM2M]设备认证结果：req={}, resp={}", authReq, resp);
+
                 //认证响应可以自定义设备ID,如果没有则使用请求URI中的ep参数
                 String deviceId = StringUtils.isEmpty(resp.getDeviceId()) ? authReq.getEndpoint() : resp.getDeviceId();
 
@@ -348,6 +387,9 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                         //监控信息
                         monitor.connected();
                         monitor.totalConnection(counter.sum());
+
+                        authReq.accept();
+                        log.info("[LwM2M]认证通过：req={}, resp={}", authReq, resp);
                     })
                     //会话empty说明注册会话失败?
                     .switchIfEmpty(Mono.fromRunnable(() -> authReq.reject("CONNECTION_REFUSED_IDENTIFIER_REJECTED")))
@@ -356,10 +398,9 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                 //认证失败返回 0x04 BAD_USER_NAME_OR_PASSWORD
                 authReq.reject("CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD");
                 monitor.rejected();
-                log.warn("MQTT客户端认证[{}]失败:{}", deviceId, resp.getMessage());
+                log.warn("LwM2M客户端认证[{}]失败:{}", deviceId, resp.getMessage());
+                return Mono.empty();
             }
-
-            return Mono.empty();
         })
         .onErrorResume(error -> Mono.fromRunnable(() -> {
             log.error(error.getMessage(), error);

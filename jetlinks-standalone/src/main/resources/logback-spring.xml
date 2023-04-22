@@ -50,9 +50,13 @@
 
     <springProfile name="dev">
 
-        <logger name="system" level="debug">
+        <logger name="system" level="DEBUG">
             <appender-ref ref="LOGEventPublisher"/>
         </logger>
+
+        <logger name="io.lettuce" level="INFO" />
+        <logger name="reactor.netty" level="INFO" />
+        <logger name="io.scalecube" level="WARN" />
 
         <root level="DEBUG">
             <appender-ref ref="AsyncConsoleAppender"/>
