@@ -35,7 +35,7 @@ public class LazyInitManagementProtocolSupports extends StaticProtocolSupports i
     @Setter(AccessLevel.PRIVATE)
     private Map<String, String> configProtocolIdMapping = new ConcurrentHashMap<>();
 
-    private Duration loadTimeOut = Duration.ofSeconds(30);
+    private Duration loadTimeOut = Duration.ofSeconds(300);
 
     public void init() {
 
@@ -74,12 +74,12 @@ public class LazyInitManagementProtocolSupports extends StaticProtocolSupports i
                 .load(definition)
                 .doOnNext(e -> {
                     e.init(definition.getConfiguration());
-                    log.debug("{} protocol[{}] success: {}", operation, definition.getId(), e);
+                    log.debug("{} protocol success [{}]: {}", operation, definition.getId(), e);
                     configProtocolIdMapping.put(definition.getId(), e.getId());
                     consumer.accept(e);
                 })
                 .onErrorResume((e) -> {
-                    log.error("{} protocol[{}] error: {}", operation, definition.getId(), e);
+                    log.error("{} protocol error [{}]: {}", operation, definition.getId(), e);
                     return Mono.empty();
                 })
                 .then();

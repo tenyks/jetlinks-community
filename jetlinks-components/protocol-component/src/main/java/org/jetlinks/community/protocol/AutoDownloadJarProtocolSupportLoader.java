@@ -156,6 +156,7 @@ public class AutoDownloadJarProtocolSupportLoader extends JarProtocolSupportLoad
 
         File file = path.toFile();
         if (file.exists()) {
+            log.info("[ProtocolJar][{}]读取本地的编解码插件JAR：fileId={}, path={}", protocolId, fileId, file);
             return Mono.just(file);
         }
 

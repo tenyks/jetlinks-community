@@ -56,7 +56,10 @@
 
         <logger name="io.lettuce" level="INFO" />
         <logger name="reactor.netty" level="INFO" />
-        <logger name="io.scalecube" level="WARN" />
+        <logger name="io.scalecube" level="INFO" />
+        <logger name="io.r2dbc" level="INFO" />
+        <logger name="dev.miku" level="INFO" />
+        <logger name="org.apache.commons.beanutils" level="INFO" />
 
         <root level="DEBUG">
             <appender-ref ref="AsyncConsoleAppender"/>
