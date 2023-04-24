@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.californium.core.coap.Response;
 import org.eclipse.leshan.core.request.ExecuteRequest;
 import org.eclipse.leshan.core.request.ObserveRequest;
+import org.eclipse.leshan.core.request.WriteRequest;
 import org.eclipse.leshan.core.request.exception.*;
 import org.eclipse.leshan.core.response.ErrorCallback;
 import org.eclipse.leshan.core.response.ExecuteResponse;
@@ -120,7 +121,8 @@ public class LeShanLwM2MServer implements LwM2MServer {
             });
         } else if(message.getObjectAndResource().codeOfExecute()){
             return Mono.fromCallable(() -> {
-                String payload = Hex.encodeHexString(message.getPayload().array());
+//                String payload = Hex.encodeHexString(message.getPayload().array());
+                String payload = message.payloadAsString();
                 final ExecuteRequest request = new ExecuteRequest(message.getObjectAndResource().getPath(), payload);
 
                 server.send(registration, request, responseWaitTime,
