@@ -6,15 +6,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.californium.core.coap.Response;
+import org.eclipse.leshan.core.request.ContentFormat;
 import org.eclipse.leshan.core.request.ExecuteRequest;
 import org.eclipse.leshan.core.request.ObserveRequest;
 import org.eclipse.leshan.core.request.WriteRequest;
 import org.eclipse.leshan.core.request.exception.*;
 import org.eclipse.leshan.core.response.ErrorCallback;
-import org.eclipse.leshan.core.response.ExecuteResponse;
 import org.eclipse.leshan.core.response.LwM2mResponse;
 import org.eclipse.leshan.core.response.ResponseCallback;
-import org.eclipse.leshan.core.util.Hex;
 import org.eclipse.leshan.server.californium.LeshanServer;
 import org.eclipse.leshan.server.observation.ObservationListener;
 import org.eclipse.leshan.server.queue.PresenceListener;
@@ -110,21 +109,38 @@ public class LeShanLwM2MServer implements LwM2MServer {
             return Mono.error(new IllegalStateException("会话已过期或设备已离线[0x05LSLMS9381]"));
         }
 
-        if (message.getObjectAndResource().codeOfObservation()) {
+        LwM2MOperation operation = message.getRequestOperation();
+        LwM2MResource resource = LwM2MResource.parse(message.getPath());
+
+        if (operation.equals(LwM2MOperation.Observe)) {
             return Mono.fromCallable(() -> {
-                final ObserveRequest request = new ObserveRequest(message.getObjectAndResource().getPath());
+                final ObserveRequest request = new ObserveRequest(message.getPath());
 
                 server.send(registration, request, responseWaitTime,
                             buildResponseCallback(message), buildErrorCallback(message));
 
                 return true;
             });
-        } else if(message.getObjectAndResource().codeOfExecute()){
+        }
+        if(operation.equals(LwM2MOperation.Write)){
             return Mono.fromCallable(() -> {
-//                String payload = Hex.encodeHexString(message.getPayload().array());
-                String payload = message.payloadAsString();
-                final ExecuteRequest request = new ExecuteRequest(message.getObjectAndResource().getPath(), payload);
+                final WriteRequest request = new WriteRequest(
+                    ContentFormat.JSON, resource.getObjectId(), resource.getObjectInstanceId(), resource.getResourceId(),
+                    message.payloadAsString()
+                );
 
+                server.send(registration, request, responseWaitTime,
+                    buildResponseCallback(message), buildErrorCallback(message));
+
+                return true;
+            });
+        }
+        if (operation.equals(LwM2MOperation.Execute)) {
+            return Mono.fromCallable(() -> {
+                final ExecuteRequest request = new ExecuteRequest(
+                    resource.getObjectId(), resource.getObjectInstanceId(), resource.getResourceId(),
+                    message.payloadAsString()
+                );
                 server.send(registration, request, responseWaitTime,
                     buildResponseCallback(message), buildErrorCallback(message));
 
@@ -143,8 +159,8 @@ public class LeShanLwM2MServer implements LwM2MServer {
                 Response coapResponse = (Response) response.getCoapResponse();
                 replyMessage.setMessageId(coapResponse.getMID());
                 replyMessage.setRegistrationId(message.getRegistrationId());
-                replyMessage.setResource(message.getObjectAndResource());
-                replyMessage.setCode(response.getCode().getCode());
+                replyMessage.setPath(message.getPath());
+                replyMessage.setResponseCode(response.getCode().getCode());
                 replyMessage.setPayload(Unpooled.wrappedBuffer(coapResponse.getPayload()));
 
                 replyFluxSink.next(SimpleLwM2MExchangeMessage.ofSuccess(message, replyMessage));
