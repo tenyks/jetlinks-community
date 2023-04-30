@@ -51,7 +51,7 @@ public class Lwm2mObservationListener implements ObservationListener {
 
         LwM2mNode contentNode = response.getContent();
 
-        if (contentNode instanceof LwM2mObjectInstance || path.equals(LwM2MResource.BinaryAppDataContainerReportRoot.getPath())) {
+        if (contentNode instanceof LwM2mObjectInstance || !path.equals(LwM2MResource.BinaryAppDataContainerReport.getPath())) {
            logger.warn("[LwM2M]忽略消息：{}", observation);
            return ;
         }
@@ -63,7 +63,8 @@ public class Lwm2mObservationListener implements ObservationListener {
         Response coapRsp = (Response) response.getCoapResponse();
 
         //TODO 根据observation.path确定是哪种资源
-        message.setResource(LwM2MResource.BinaryAppDataContainerReport);
+        message.setPath(response.getObservation().getPath().toString());
+//        message.setPayloadType(response.get);
         message.setPayload(Unpooled.wrappedBuffer((byte[]) contentObj));
         message.setMessageId(coapRsp.getMID());
         message.setRegistrationId(registration.getId());

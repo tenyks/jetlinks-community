@@ -1,6 +1,5 @@
 package org.jetlinks.community.network.coap.device;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;
@@ -27,7 +26,6 @@ import org.jetlinks.core.message.codec.FromDeviceMessageContext;
 import org.jetlinks.core.message.codec.Transport;
 import org.jetlinks.core.message.codec.lwm2m.*;
 import org.jetlinks.core.server.session.DeviceSession;
-import org.jetlinks.core.server.session.KeepOnlineSession;
 import org.jetlinks.core.trace.DeviceTracer;
 import org.jetlinks.core.trace.FluxTracer;
 import org.jetlinks.core.trace.MonoTracer;
@@ -39,7 +37,6 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
-import java.time.Duration;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 
@@ -224,9 +221,10 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
         if (event.isOfOnline()) {
             // 默认向设备发送Observe /19/0/0的指令
             SimpleLwM2MDownlinkMessage observeMsg = new SimpleLwM2MDownlinkMessage();
-            observeMsg.setResource(LwM2MResource.BinaryAppDataContainerReport);
+            observeMsg.setPath(LwM2MResource.BinaryAppDataContainerReport.getPath());
             observeMsg.setRegistrationId(event.getRegistrationId());
             observeMsg.setPayload(Unpooled.EMPTY_BUFFER);
+            observeMsg.setRequestOperation(LwM2MOperation.Observe);
 
             return server.send(observeMsg)
 //                    .delayElement(Duration.ofSeconds(3))

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.californium.core.coap.Response;
+import org.eclipse.leshan.core.node.LwM2mSingleResource;
 import org.eclipse.leshan.core.request.ContentFormat;
 import org.eclipse.leshan.core.request.ExecuteRequest;
 import org.eclipse.leshan.core.request.ObserveRequest;
@@ -126,7 +127,7 @@ public class LeShanLwM2MServer implements LwM2MServer {
             return Mono.fromCallable(() -> {
                 final WriteRequest request = new WriteRequest(
                     ContentFormat.JSON, resource.getObjectId(), resource.getObjectInstanceId(), resource.getResourceId(),
-                    message.payloadAsString()
+                    message.payloadAsBytes()
                 );
 
                 server.send(registration, request, responseWaitTime,
