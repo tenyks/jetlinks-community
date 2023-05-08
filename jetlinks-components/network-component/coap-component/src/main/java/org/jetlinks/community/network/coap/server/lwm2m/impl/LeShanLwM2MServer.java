@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Hex;
 import org.eclipse.californium.core.coap.Response;
 import org.eclipse.leshan.core.node.LwM2mSingleResource;
 import org.eclipse.leshan.core.request.ContentFormat;
@@ -125,9 +126,11 @@ public class LeShanLwM2MServer implements LwM2MServer {
         }
         if(operation.equals(LwM2MOperation.Write)){
             return Mono.fromCallable(() -> {
+                String hex = Hex.encodeHexString(message.payloadAsBytes());
+
                 final WriteRequest request = new WriteRequest(
-                    ContentFormat.JSON, resource.getObjectId(), resource.getObjectInstanceId(), resource.getResourceId(),
-                    message.payloadAsBytes()
+                    ContentFormat.OPAQUE, resource.getObjectId(), resource.getObjectInstanceId(),
+                    resource.getResourceId(), message.payloadAsBytes()
                 );
 
                 server.send(registration, request, responseWaitTime,
