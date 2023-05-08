@@ -146,10 +146,22 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                 error -> log.error(error.getMessage(), error)
             );
 
-        this.disposable = Disposables.composite(forAuthDisposable, forRegEventDisposable, forObservationDisposable);
+        Disposable forReplyDisposable = server
+            .handleReply()
+            .publishOn(Schedulers.boundedElastic())
+            .flatMap(exchangeMsg -> this.decodeAndHandleMessage(exchangeMsg.getUplinkMessage()))
+            .subscribe(
+                ignore -> {},
+                error -> log.error(error.getMessage(), error)
+            );
+
+        this.disposable = Disposables.composite(forAuthDisposable, forRegEventDisposable,
+                                    forObservationDisposable, forReplyDisposable);
     }
 
-    //解码消息并处理
+    /**
+     * 解码消息并处理
+     */
     private Mono<Void> decodeAndHandleMessage(LwM2MUplinkMessage message) {
         monitor.receivedMessage();
 
