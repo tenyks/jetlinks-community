@@ -149,7 +149,17 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
         Disposable forReplyDisposable = server
             .handleReply()
             .publishOn(Schedulers.boundedElastic())
-            .flatMap(exchangeMsg -> this.decodeAndHandleMessage(exchangeMsg.getUplinkMessage()))
+            .flatMap(exchangeMsg -> {
+                if (exchangeMsg.isSuccess()) {
+                    return this.decodeAndHandleMessage(exchangeMsg.getUplinkMessage());
+                } else {
+                    log.error("发生指令失败:{}", exchangeMsg);
+                    return Mono.empty();
+                }
+            })
+            .onErrorContinue((t, obj) -> {
+                log.error("异常错误：msg={}", obj, t);
+            })
             .subscribe(
                 ignore -> {},
                 error -> log.error(error.getMessage(), error)

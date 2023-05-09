@@ -165,7 +165,11 @@ public class LeShanLwM2MServer implements LwM2MServer {
                 replyMessage.setRegistrationId(message.getRegistrationId());
                 replyMessage.setPath(message.getPath());
                 replyMessage.setResponseCode(response.getCode().getCode());
-                replyMessage.setPayload(Unpooled.wrappedBuffer(coapResponse.getPayload()));
+                if (coapResponse.getPayload() != null) {
+                    replyMessage.setPayload(Unpooled.wrappedBuffer(coapResponse.getPayload()));
+                } else {
+                    replyMessage.setPayload(Unpooled.EMPTY_BUFFER);
+                }
 
                 replyFluxSink.next(SimpleLwM2MExchangeMessage.ofSuccess(message, replyMessage));
             }
