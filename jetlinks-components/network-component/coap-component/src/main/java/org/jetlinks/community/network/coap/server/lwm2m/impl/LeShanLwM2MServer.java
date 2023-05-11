@@ -126,7 +126,7 @@ public class LeShanLwM2MServer implements LwM2MServer {
         }
         if(operation.equals(LwM2MOperation.Write)){
             return Mono.fromCallable(() -> {
-                String hex = Hex.encodeHexString(message.payloadAsBytes());
+//                String hex = Hex.encodeHexString(message.payloadAsBytes());
 
                 final WriteRequest request = new WriteRequest(
                     ContentFormat.OPAQUE, resource.getObjectId(), resource.getObjectInstanceId(),

@@ -50,14 +50,14 @@ import java.util.function.Function;
 public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
     private static final AttributeKey<String> ENDPOINT = AttributeKey.stringKey("endpoint");
 
-    final LwM2MServer server;
+    final LwM2MServer               server;
 
     /**
      * 定制协议
      */
-    private Mono<ProtocolSupport> custProtocol;
+    private Mono<ProtocolSupport>   custProtocol;
 
-    private final DeviceRegistry deviceRegistry;
+    private final DeviceRegistry    deviceRegistry;
 
     /**
      * 设备会话管理器
@@ -248,21 +248,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
             observeMsg.setPayload(Unpooled.EMPTY_BUFFER);
             observeMsg.setRequestOperation(LwM2MOperation.Observe);
 
-            return server.send(observeMsg)
-//                    .delayElement(Duration.ofSeconds(3))
-//                    .flatMap(flag -> {
-//                        if (flag) {
-//                            SimpleLwM2MDownlinkMessage observeMsg2 = new SimpleLwM2MDownlinkMessage();
-//                            observeMsg2.setResource(LwM2MResource.BinaryAppDataContainerReportRoot);
-//                            observeMsg2.setRegistrationId(event.getRegistrationId());
-//                            observeMsg2.setPayload(Unpooled.EMPTY_BUFFER);
-//
-//                            return server.send(observeMsg2);
-//                        } else {
-//                            return Mono.empty();
-//                        }
-//                    })
-                    .then();
+            return server.send(observeMsg).then();
         }
         if (event.isOfOffline()) {
             counter.decrement();
