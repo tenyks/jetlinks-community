@@ -13,10 +13,7 @@ import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.device.DeviceRegistry;
 import org.jetlinks.core.enums.ErrorCode;
 import org.jetlinks.core.exception.DeviceOperationException;
-import org.jetlinks.core.message.DeviceMessageReply;
-import org.jetlinks.core.message.FunctionInvokeMessageSender;
-import org.jetlinks.core.message.ReadPropertyMessageSender;
-import org.jetlinks.core.message.WritePropertyMessageSender;
+import org.jetlinks.core.message.*;
 import org.jetlinks.core.message.function.FunctionInvokeMessageReply;
 import org.jetlinks.core.message.property.ReadPropertyMessageReply;
 import org.jetlinks.core.message.property.WritePropertyMessageReply;
@@ -106,12 +103,20 @@ public class DeviceMessageController {
             .map(mapReply(WritePropertyMessageReply::getProperties));
     }
 
-    //设备功能调用
+    /**
+     * 设备功能调用
+     * @param deviceId
+     * @param functionId
+     * @param ttl           有限生命时长，单位：毫秒，只对异步消息起效
+     * @param properties
+     * @return
+     */
     @PostMapping("invoked/{deviceId}/function/{functionId}")
     @SneakyThrows
     @Deprecated
     public Flux<?> invokedFunction(@PathVariable String deviceId,
                                    @PathVariable String functionId,
+                                   @RequestParam Long   ttl,
                                    @RequestBody Map<String, Object> properties) {
 
         return registry
@@ -121,6 +126,7 @@ public class DeviceMessageController {
                 .messageSender()
                 .invokeFunction(functionId)
                 .messageId(IDGenerator.SNOW_FLAKE_STRING.generate())
+                .header(Headers.ttl, ttl != null && ttl > 0 ? ttl : Headers.ttl.getDefaultValue())
                 .setParameter(properties)
                 .validate()
             )

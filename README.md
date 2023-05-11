@@ -63,6 +63,9 @@ TCP/UDP/MQTT/HTTP、TLS/DTLS、不同厂商、不同设备、不同报文、统�
 ------|----simulator            # 设备模拟器
 ```
 
+## 配置项
+* jetlinks.device.message.default-timeout：消息下发超时
+
 ## 文档
 
 [快速开始](http://doc.jetlinks.cn/install-deployment/start-with-source.html) 
