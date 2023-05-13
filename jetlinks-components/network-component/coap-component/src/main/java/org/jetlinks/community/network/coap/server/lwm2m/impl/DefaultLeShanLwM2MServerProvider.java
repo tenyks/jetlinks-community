@@ -132,8 +132,6 @@ public class DefaultLeShanLwM2MServerProvider implements NetworkProvider<LeShanL
             // lwm2m协议设备注册标识生成器
             builder.setRegistrationIdProvider(new Lwm2mRegistrationIdProvider());
 
-            //
-
             // 设置授权认证
             builder.setAuthorizer(server.buildAndBindAuthorizer(securityStore, deviceRegistry));
             LeshanServer lsServer = builder.build();

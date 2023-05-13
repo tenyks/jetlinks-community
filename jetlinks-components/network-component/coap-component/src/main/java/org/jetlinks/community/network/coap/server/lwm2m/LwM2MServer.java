@@ -41,6 +41,11 @@ public interface LwM2MServer extends ServerNetwork {
     Flux<LwM2MRegistrationEvent>    handleRegistrationEvent();
 
     /**
+     * @return  监听设备睡眠/唤醒事件
+     */
+    Flux<LwM2MPresenceEvent>        handlePresenceEvent();
+
+    /**
      * 发送消息到客户端
      *
      * @param message MQTT消息

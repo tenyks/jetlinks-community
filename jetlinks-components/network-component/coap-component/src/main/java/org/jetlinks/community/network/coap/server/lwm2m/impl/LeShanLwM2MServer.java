@@ -5,9 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Hex;
 import org.eclipse.californium.core.coap.Response;
-import org.eclipse.leshan.core.node.LwM2mSingleResource;
 import org.eclipse.leshan.core.request.ContentFormat;
 import org.eclipse.leshan.core.request.ExecuteRequest;
 import org.eclipse.leshan.core.request.ObserveRequest;
@@ -69,9 +67,12 @@ public class LeShanLwM2MServer implements LwM2MServer {
 
     private Lwm2mRegistrationListener   registrationListener;
 
+    private Lwm2mPresenceListener       presenceListener;
+
     private Flux<LwM2MExchangeMessage>  replyFlux;
 
     private FluxSink<LwM2MExchangeMessage> replyFluxSink;
+
 
     public LeShanLwM2MServer(String id, long responseWaitTime) {
         this.id = id;
@@ -263,11 +264,13 @@ public class LeShanLwM2MServer implements LwM2MServer {
     }
 
     public PresenceListener buildAndBindPresenceListener() {
-        return new Lwm2mPresenceListener();
+        this.presenceListener = new Lwm2mPresenceListener();
+        return this.presenceListener;
     }
 
     public ObservationListener buildAndBindObservationListener() {
         this.observationListener =  new Lwm2mObservationListener();
         return this.observationListener;
     }
+
 }
