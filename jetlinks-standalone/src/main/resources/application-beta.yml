@@ -2,8 +2,6 @@ server:
   port: 28848
 
 spring:
-  profiles:
-    active: beta
   application:
     name: jetlinks-platform
   jackson:
