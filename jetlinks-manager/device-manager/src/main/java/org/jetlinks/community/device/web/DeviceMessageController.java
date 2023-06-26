@@ -116,7 +116,7 @@ public class DeviceMessageController {
     @Deprecated
     public Flux<?> invokedFunction(@PathVariable String deviceId,
                                    @PathVariable String functionId,
-                                   @RequestParam Long   ttl,
+                                   @RequestParam(required = false, defaultValue = "180000") Long   ttl,
                                    @RequestBody Map<String, Object> properties) {
 
         return registry
