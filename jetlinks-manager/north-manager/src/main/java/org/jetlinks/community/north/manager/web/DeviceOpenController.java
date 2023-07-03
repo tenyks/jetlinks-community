@@ -28,7 +28,7 @@ public class DeviceOpenController {
      */
     @PostMapping("/sendCommand")
     @SaveAction @Operation(summary = "下发指令")
-    public Mono<String> sendCommand(@RequestBody DeviceCommandRequest cmdReq) {
+    public Mono<String> sendServiceContextCommand(@RequestBody DeviceCommandRequest cmdReq) {
         return null;
     }
 
