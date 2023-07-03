@@ -77,7 +77,7 @@ public class DeviceGatewayHelper {
                                                     Function<DeviceOperator, DeviceSession> sessionBuilder,
                                                     Consumer<DeviceSession> sessionConsumer,
                                                     Runnable deviceNotFoundCallback) {
-
+        //TODO 发送消息到队列
         return handleDeviceMessage(message, sessionBuilder, sessionConsumer, () -> Mono.fromRunnable(deviceNotFoundCallback));
     }
 
