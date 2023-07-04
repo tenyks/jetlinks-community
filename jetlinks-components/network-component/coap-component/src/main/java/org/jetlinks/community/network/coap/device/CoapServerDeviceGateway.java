@@ -92,7 +92,7 @@ class CoapServerDeviceGateway extends AbstractDeviceGateway implements DeviceGat
     }
 
     public NetworkType getNetworkType() {
-        return DefaultNetworkType.TCP_SERVER;
+        return DefaultNetworkType.COAP_SERVER;
     }
 
 

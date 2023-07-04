@@ -103,7 +103,7 @@ public class CaliforniumCoapServer implements CoapServer {
 
     @Override
     public NetworkType getType() {
-        return DefaultNetworkType.TCP_SERVER;
+        return DefaultNetworkType.COAP_SERVER;
     }
 
     @Override

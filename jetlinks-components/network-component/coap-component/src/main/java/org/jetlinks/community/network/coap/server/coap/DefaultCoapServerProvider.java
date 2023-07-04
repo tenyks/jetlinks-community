@@ -50,7 +50,7 @@ public class DefaultCoapServerProvider implements NetworkProvider<CoapServerProp
     @Nonnull
     @Override
     public NetworkType getType() {
-        return DefaultNetworkType.TCP_SERVER;
+        return DefaultNetworkType.COAP_SERVER;
     }
 
     @Nonnull
@@ -61,7 +61,7 @@ public class DefaultCoapServerProvider implements NetworkProvider<CoapServerProp
         return initTcpServer(tcpServer, properties);
     }
 
-    private Mono<Network> initTcpServer(CaliforniumCoapServer tcpServer, CoapServerProperties properties) {
+    private Mono<Network> initTcpServer(CaliforniumCoapServer coapServer, CoapServerProperties properties) {
         return convert(properties)
             .map(options -> {
                 int instance = Math.max(2, properties.getInstance());
@@ -72,12 +72,12 @@ public class DefaultCoapServerProvider implements NetworkProvider<CoapServerProp
                 Supplier<PayloadParser> parserSupplier= payloadParserBuilder.build(properties.getParserType(), properties);
                 parserSupplier.get();
 
-                tcpServer.setParserSupplier(parserSupplier);
-                tcpServer.setServer(instances);
-                tcpServer.setKeepAliveTimeout(properties.getLong("keepAliveTimeout", Duration
+                coapServer.setParserSupplier(parserSupplier);
+                coapServer.setServer(instances);
+                coapServer.setKeepAliveTimeout(properties.getLong("keepAliveTimeout", Duration
                     .ofMinutes(10)
                     .toMillis()));
-                tcpServer.setBind(new InetSocketAddress(properties.getHost(), properties.getPort()));
+                coapServer.setBind(new InetSocketAddress(properties.getHost(), properties.getPort()));
                 for (NetServer netServer : instances) {
                     vertx.nettyEventLoopGroup()
                         .execute(()->{
@@ -85,13 +85,13 @@ public class DefaultCoapServerProvider implements NetworkProvider<CoapServerProp
                                 if (result.succeeded()) {
                                     log.info("tcp server startup on {}", result.result().actualPort());
                                 } else {
-                                    tcpServer.setLastError(result.cause().getMessage());
+                                    coapServer.setLastError(result.cause().getMessage());
                                     log.error("startup tcp server error", result.cause());
                                 }
                             });
                         });
                 }
-                return tcpServer;
+                return coapServer;
             });
     }
 
