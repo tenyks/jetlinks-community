@@ -165,6 +165,9 @@ micrometer:
       default:
         step: 30s
 system:
+  north:
+    jms:
+      brokerUrl: tcp://MyDevS1:61616
   config:
     scopes:
       - id: front

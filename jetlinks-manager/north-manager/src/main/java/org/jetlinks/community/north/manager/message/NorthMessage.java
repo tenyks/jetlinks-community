@@ -1,5 +1,7 @@
 package org.jetlinks.community.north.manager.message;
 
+import org.jetlinks.core.event.TopicPayload;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -78,6 +80,15 @@ public class NorthMessage implements Serializable {
      * 参考：产品物模型
      */
     private Map<String, Object> properties;
+
+    public static NorthMessage fromTopicPayload(TopicPayload payload) {
+
+
+
+
+
+        return null;
+    }
 
     public String getUuid() {
         return uuid;
