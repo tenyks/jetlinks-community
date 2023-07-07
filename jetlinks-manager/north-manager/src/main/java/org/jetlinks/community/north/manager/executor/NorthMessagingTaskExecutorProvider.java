@@ -5,18 +5,18 @@ import org.apache.activemq.AlreadyClosedException;
 import org.apache.activemq.ConnectionClosedException;
 import org.apache.commons.lang3.StringUtils;
 import org.jetlinks.community.north.manager.message.NorthMessage;
+import org.jetlinks.core.codec.defaults.MessageCodec;
 import org.jetlinks.core.event.EventBus;
 import org.jetlinks.core.event.Subscription;
-import org.jetlinks.core.event.TopicPayload;
 import org.jetlinks.core.jms.ActiveMQClientImpl;
 import org.jetlinks.core.jms.JMSClient;
+import org.jetlinks.core.message.Message;
 import org.jetlinks.rule.engine.api.task.ExecutionContext;
 import org.jetlinks.rule.engine.api.task.TaskExecutor;
 import org.jetlinks.rule.engine.api.task.TaskExecutorProvider;
 import org.jetlinks.rule.engine.defaults.AbstractTaskExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.Disposable;
@@ -58,7 +58,7 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
         SUBSCRIBED_TOPICS.add("/offline");
     }
 
-    private final EventBus eventBus;
+    private final EventBus  eventBus;
 
     private final String    jmsBrokerUrl;
 
@@ -86,7 +86,7 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
 
         private JMSClient   jmsClient;
 
-        private BlockingQueue<TopicPayload> queue;
+        private BlockingQueue<Message> queue;
 
         private AtomicBoolean stop = new AtomicBoolean(false);
 
@@ -105,7 +105,8 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
         protected Disposable doStart() {
             String subId = "north-messaging:".concat(context.getInstanceId()).concat(":").concat(context.getJob().getNodeId());
             Subscription subscription = Subscription.builder().subscriberId(subId).topics(SUBSCRIBED_TOPICS).local().build();
-            Disposable disposable1 = eventBus.subscribe(subscription, this::handleMessage);
+            Disposable disposable1 = eventBus.subscribe(subscription, MessageCodec.INSTANCE)
+                .subscribe(v -> this.handleMessage(v));
 
             Thread pushingThread = new Thread(this, "north-pushing-thread");
 
@@ -119,27 +120,24 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
             stop.set(true);
         }
 
-        private Mono<Void> handleMessage(TopicPayload payload) {
-            return Mono.defer(() -> {
-                queue.add(payload);
-                return Mono.empty();
-            });
+        private void handleMessage(Message message) {
+            queue.add(message);
         }
 
         @Override
         public void run() {
-            List<TopicPayload> buf = new ArrayList<>(110);
+            List<Message> bufList = new ArrayList<>(110);
 
             int idx = 0;
             log.warn("[NorthMessaging]开始北向消息推送...");
             while (!stop.get()) {
-                if (buf.isEmpty()) {
+                if (bufList.isEmpty()) {
                     // 使用平衡高吞吐和高响应延时的方式读取queue
                     if (queue.isEmpty()) {
                         try {
-                            TopicPayload tp = queue.poll(30, TimeUnit.SECONDS);
-                            if(tp != null) {
-                                buf.add(tp);
+                            Message msg = queue.poll(30, TimeUnit.SECONDS);
+                            if(msg != null) {
+                                bufList.add(msg);
                             } else {
                                 log.info("[NorthMessaging]无消息");
                             }
@@ -149,23 +147,23 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
                         }
                     }
 
-                    queue.drainTo(buf, Math.min(queue.size(), 100));
+                    queue.drainTo(bufList, Math.min(queue.size(), 100));
                 }
 
-                idx = pushingBatchMessage(buf, idx);
-                if (idx >= buf.size()) {
-                    log.info("[NorthMessaging]推送了{}条消息", buf.size());
+                idx = pushingBatchMessage(bufList, idx);
+                if (idx >= bufList.size()) {
+                    log.info("[NorthMessaging]推送了{}条消息", bufList.size());
 
                     idx = 0;
-                    buf.clear();
+                    bufList.clear();
                 }
             }
 
             log.warn("[NorthMessaging]终止北向消息推送。");
         }
 
-        private int pushingBatchMessage(List<TopicPayload> payloadList, int srcIdx) {
-            if (payloadList.isEmpty()) return srcIdx;
+        private int pushingBatchMessage(List<Message> msgList, int srcIdx) {
+            if (msgList.isEmpty()) return srcIdx;
 
             if (jmsClient == null) {
                 try {
@@ -179,10 +177,10 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
 
             boolean reconnectClient = false;
             int idx = srcIdx;
-            for (; idx < payloadList.size(); idx++) {
-                TopicPayload tp = payloadList.get(idx);
+            for (; idx < msgList.size(); idx++) {
+                Message msg = msgList.get(idx);
 
-                NorthMessage northMsg = NorthMessage.fromTopicPayload(tp);
+                NorthMessage northMsg = NorthMessage.fromMessage(msg);
                 String payloadStr = JSONObject.toJSONString(northMsg);
                 try {
                     jmsClient.send(DST_NORTH_TOPIC, payloadStr);

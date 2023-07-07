@@ -1,6 +1,11 @@
 package org.jetlinks.community.north.manager.message;
 
-import org.jetlinks.core.event.TopicPayload;
+import com.alibaba.fastjson.JSONObject;
+import org.jetlinks.core.message.*;
+import org.jetlinks.core.message.function.FunctionInvokeMessageReply;
+import org.jetlinks.core.message.property.ReadPropertyMessageReply;
+import org.jetlinks.core.message.property.ReportPropertyMessage;
+import org.jetlinks.core.message.property.WritePropertyMessageReply;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -12,12 +17,12 @@ public class NorthMessage implements Serializable {
     /**
      * 消息唯一标识，可用于消息去重
      */
-    private String     uuid;
+    private String      uuid;
 
     /**
-     * 产品标识
+     * 物模型编码
      */
-    private String      productId;
+    private String      thingId;
 
     /**
      * 设备标识
@@ -30,8 +35,8 @@ public class NorthMessage implements Serializable {
     private String      deviceName;
 
     /**
-     * OFFLINE = 离线
-     * ONLINE = 上线
+     * DEVICE_OFFLINE = 离线
+     * DEVICE_ONLINE = 上线
      * INVOKE_FUNCTION_REPLY = 调用功能/下发指令回复
      * REPORT_PROPERTY = 属性上报
      */
@@ -81,13 +86,121 @@ public class NorthMessage implements Serializable {
      */
     private Map<String, Object> properties;
 
-    public static NorthMessage fromTopicPayload(TopicPayload payload) {
+    /**
+     * 原始消息的JSON字符串
+     */
+    private String      rawMessage;
 
-
-
-
+    public static NorthMessage fromMessage(Message msg) {
+        if (msg instanceof ReportPropertyMessage) {
+            return fromMessage((ReportPropertyMessage) msg);
+        } else if (msg instanceof ReadPropertyMessageReply) {
+            return fromMessage((ReadPropertyMessageReply) msg);
+        } else if (msg instanceof WritePropertyMessageReply) {
+            return fromMessage((WritePropertyMessageReply) msg);
+        } else if (msg instanceof DeviceRegisterMessage) {
+            return fromMessage((DeviceRegisterMessage) msg);
+        } else if (msg instanceof DeviceUnRegisterMessage) {
+            return fromMessage((DeviceUnRegisterMessage) msg);
+        } else if (msg instanceof DeviceLogMessage) {
+            return fromMessage((DeviceLogMessage) msg);
+        } else if (msg instanceof DeviceOnlineMessage) {
+            return fromMessage((DeviceOnlineMessage) msg);
+        } else if (msg instanceof DeviceOfflineMessage) {
+            return fromMessage((DeviceOfflineMessage) msg);
+        } else if (msg instanceof DirectDeviceMessage) {
+            return fromMessage((DirectDeviceMessage) msg);
+        }
 
         return null;
+    }
+
+    public static NorthMessage fromMessage(ReportPropertyMessage msg) {
+        NorthMessage rstMsg = new NorthMessage();
+
+        rstMsg.setUuid(msg.getMessageId());
+        rstMsg.setMessageId(msg.getMessageId());
+        rstMsg.setDeviceId(msg.getDeviceId());
+        rstMsg.setThingId(msg.getThingId());
+        rstMsg.setProperties(msg.getProperties());
+        rstMsg.setMessageType("REPORT_PROPERTY");
+        rstMsg.setTimestamp(msg.getTimestamp());
+
+        rstMsg.setRawMessage(JSONObject.toJSONString(msg));
+
+        return rstMsg;
+    }
+
+    public static NorthMessage fromMessage(ReadPropertyMessageReply msg) {
+        return null;
+    }
+
+    public static NorthMessage fromMessage(WritePropertyMessageReply msg) {
+        return null;
+    }
+
+    public static NorthMessage fromMessage(DeviceRegisterMessage msg) {
+        return null;
+    }
+
+    public static NorthMessage fromMessage(DeviceUnRegisterMessage msg) {
+        return null;
+    }
+
+    public static NorthMessage fromMessage(DeviceLogMessage msg) {
+        return null;
+    }
+
+    public static NorthMessage fromMessage(DeviceOnlineMessage msg) {
+        NorthMessage rstMsg = new NorthMessage();
+
+        rstMsg.setUuid(msg.getMessageId());
+        rstMsg.setMessageId(msg.getMessageId());
+        rstMsg.setDeviceId(msg.getDeviceId());
+        rstMsg.setThingId(msg.getThingId());
+        rstMsg.setMessageType("DEVICE_ONLINE");
+        rstMsg.setTimestamp(msg.getTimestamp());
+
+        rstMsg.setRawMessage(JSONObject.toJSONString(msg));
+
+        return rstMsg;
+    }
+
+    public static NorthMessage fromMessage(DeviceOfflineMessage msg) {
+        NorthMessage rstMsg = new NorthMessage();
+
+        rstMsg.setUuid(msg.getMessageId());
+        rstMsg.setMessageId(msg.getMessageId());
+        rstMsg.setDeviceId(msg.getDeviceId());
+        rstMsg.setThingId(msg.getThingId());
+        rstMsg.setMessageType("DEVICE_OFFLINE");
+        rstMsg.setTimestamp(msg.getTimestamp());
+
+        rstMsg.setRawMessage(JSONObject.toJSONString(msg));
+
+        return rstMsg;
+    }
+
+    public static NorthMessage fromMessage(DirectDeviceMessage msg) {
+        return null;
+    }
+
+    public static NorthMessage fromMessage(FunctionInvokeMessageReply msg) {
+        NorthMessage rstMsg = new NorthMessage();
+
+        rstMsg.setUuid(msg.getMessageId());
+        rstMsg.setMessageId(msg.getMessageId());
+        rstMsg.setDeviceId(msg.getDeviceId());
+        rstMsg.setThingId(msg.getThingId());
+        rstMsg.setFunctionId(msg.getFunctionId());
+        rstMsg.setMessageType("INVOKE_FUNCTION_REPLY");
+        rstMsg.setOutput(msg.getOutput());
+        rstMsg.setSuccess(msg.isSuccess());
+        rstMsg.setTimestamp(msg.getTimestamp());
+
+        rstMsg.setRawMessage(JSONObject.toJSONString(msg));
+
+        return rstMsg;
     }
 
     public String getUuid() {
@@ -98,12 +211,12 @@ public class NorthMessage implements Serializable {
         this.uuid = uuid;
     }
 
-    public String getProductId() {
-        return productId;
+    public String getThingId() {
+        return thingId;
     }
 
-    public void setProductId(String productId) {
-        this.productId = productId;
+    public void setThingId(String thingId) {
+        this.thingId = thingId;
     }
 
     public String getDeviceId() {
@@ -194,11 +307,19 @@ public class NorthMessage implements Serializable {
         this.properties = properties;
     }
 
+    public String getRawMessage() {
+        return rawMessage;
+    }
+
+    public void setRawMessage(String rawMessage) {
+        this.rawMessage = rawMessage;
+    }
+
     @Override
     public String toString() {
         return "NorthMessage{" +
             "uuid='" + uuid + '\'' +
-            ", productId='" + productId + '\'' +
+            ", thingId='" + thingId + '\'' +
             ", deviceId='" + deviceId + '\'' +
             ", deviceName='" + deviceName + '\'' +
             ", messageType='" + messageType + '\'' +
@@ -210,6 +331,7 @@ public class NorthMessage implements Serializable {
             ", message='" + message + '\'' +
             ", functionId='" + functionId + '\'' +
             ", properties=" + properties +
+            ", rawMessage='" + rawMessage + '\'' +
             '}';
     }
 }
