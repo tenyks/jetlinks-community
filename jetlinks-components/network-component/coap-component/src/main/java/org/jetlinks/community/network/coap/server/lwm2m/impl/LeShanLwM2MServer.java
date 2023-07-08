@@ -23,6 +23,7 @@ import org.eclipse.leshan.server.security.Authorizer;
 import org.eclipse.leshan.server.security.SecurityStore;
 import org.jetlinks.community.network.DefaultNetworkType;
 import org.jetlinks.community.network.NetworkType;
+import org.jetlinks.community.network.coap.server.lwm2m.LwM2MPresenceEvent;
 import org.jetlinks.community.network.coap.server.lwm2m.LwM2MRegistrationEvent;
 import org.jetlinks.community.network.coap.server.lwm2m.LwM2MServer;
 import org.jetlinks.core.device.DeviceRegistry;
@@ -273,4 +274,8 @@ public class LeShanLwM2MServer implements LwM2MServer {
         return this.observationListener;
     }
 
+    @Override
+    public Flux<LwM2MPresenceEvent> handlePresenceEvent() {
+        return null;
+    }
 }
