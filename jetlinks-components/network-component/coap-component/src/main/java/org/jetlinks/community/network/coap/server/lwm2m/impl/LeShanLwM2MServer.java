@@ -276,6 +276,6 @@ public class LeShanLwM2MServer implements LwM2MServer {
 
     @Override
     public Flux<LwM2MPresenceEvent> handlePresenceEvent() {
-        return null;
+        return Flux.empty();
     }
 }
