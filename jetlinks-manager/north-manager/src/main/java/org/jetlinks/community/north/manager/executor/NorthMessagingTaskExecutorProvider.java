@@ -39,6 +39,7 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
 
     private static final Logger log = LoggerFactory.getLogger(NorthMessagingTaskExecutorProvider.class);
 
+    private static final int    JMS_COMMIT_BATCH_SIZE = 20;
     private static final List<String> SUBSCRIBED_TOPICS = new ArrayList<>();
     private static final String DST_NORTH_TOPIC = "/iot/northMessage";
     private static final long   SLEEP_SHORT_TIME = 1000;
@@ -86,14 +87,19 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
 
         private JMSClient   jmsClient;
 
-        private BlockingQueue<Message> queue;
+        /**
+         * 待发往北向对接JMS队列的消息
+         */
+        private BlockingQueue<Message> waitToPushQueue;
 
-        private AtomicBoolean stop = new AtomicBoolean(false);
+        private AtomicBoolean   stop = new AtomicBoolean(false);
+
+        private Thread          attachedThread = null;
 
         public NorthMessagingTaskExecutor(ExecutionContext context) {
             super(context);
 
-            this.queue = new LinkedBlockingDeque<>();
+            this.waitToPushQueue = new LinkedBlockingDeque<>();
         }
 
         @Override
@@ -105,41 +111,41 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
         protected Disposable doStart() {
             String subId = "north-messaging:".concat(context.getInstanceId()).concat(":").concat(context.getJob().getNodeId());
             Subscription subscription = Subscription.builder().subscriberId(subId).topics(SUBSCRIBED_TOPICS).local().build();
-            Disposable disposable1 = eventBus.subscribe(subscription, MessageCodec.INSTANCE)
-                .subscribe(v -> this.handleMessage(v));
+            Disposable disposable1 = eventBus.subscribe(subscription, MessageCodec.INSTANCE).subscribe(this::handleMessage);
 
-            Thread pushingThread = new Thread(this, "north-pushing-thread");
-
-            pushingThread.start();
+            attachedThread = new Thread(this, "north-pushing-thread");
+            attachedThread.start();
 
             return Disposables.composite(disposable1, this);
         }
 
         @Override
         public void dispose() {
-            stop.set(true);
+            this.stop.set(true);
+            this.attachedThread.interrupt();
         }
 
         private void handleMessage(Message message) {
-            queue.add(message);
+            waitToPushQueue.add(message);
         }
 
         @Override
         public void run() {
-            List<Message> bufList = new ArrayList<>(110);
+            List<Message> bufList = new ArrayList<>(JMS_COMMIT_BATCH_SIZE + 1);
 
             int idx = 0;
             log.warn("[NorthMessaging]开始北向消息推送...");
+
             while (!stop.get()) {
                 if (bufList.isEmpty()) {
                     // 使用平衡高吞吐和高响应延时的方式读取queue
-                    if (queue.isEmpty()) {
+                    if (waitToPushQueue.isEmpty()) {
                         try {
-                            Message msg = queue.poll(30, TimeUnit.SECONDS);
+                            Message msg = waitToPushQueue.poll(30, TimeUnit.SECONDS);
                             if(msg != null) {
                                 bufList.add(msg);
                             } else {
-                                log.info("[NorthMessaging]无消息");
+                                log.info("[NorthMessaging]待发送的北向消息队列为空");
                             }
                         } catch (InterruptedException e) {
                             log.info("[NorthMessaging]等待消息被中断：", e);
@@ -147,7 +153,7 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
                         }
                     }
 
-                    queue.drainTo(bufList, Math.min(queue.size(), 100));
+                    waitToPushQueue.drainTo(bufList, Math.min(waitToPushQueue.size(), JMS_COMMIT_BATCH_SIZE));
                 }
 
                 idx = pushingBatchMessage(bufList, idx);
@@ -159,7 +165,7 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
                 }
             }
 
-            log.warn("[NorthMessaging]终止北向消息推送。");
+            log.warn("[NorthMessaging]北向消息推送已终止。");
         }
 
         private int pushingBatchMessage(List<Message> msgList, int srcIdx) {
@@ -168,8 +174,9 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
             if (jmsClient == null) {
                 try {
                     jmsClient = new ActiveMQClientImpl("iot-north-messaging", jmsBrokerUrl);
+                    log.info("[NorthMessaging]建立JMS链接成功：{}", jmsClient);
                 } catch (JMSException e) {
-                    log.error("[NorthMessaging]JMS建立链接失败：url={}", jmsBrokerUrl, e);
+                    log.error("[NorthMessaging]JMS建立链接失败：url={}，请检查链接配置或JMS服务器", jmsBrokerUrl, e);
                     sleepAMoment(SLEEP_LONG_TIME);
                     return srcIdx;
                 }
@@ -184,20 +191,20 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
                 String payloadStr = JSONObject.toJSONString(northMsg);
                 try {
                     jmsClient.send(DST_NORTH_TOPIC, payloadStr);
-                    log.debug("[NorthMessaging]消息已发送：{}", payloadStr);
+                    log.debug("[NorthMessaging]JMS消息已发送：{}", payloadStr);
                 } catch (ConnectionClosedException | AlreadyClosedException e) {
                     reconnectClient = true;
-                    log.warn("[NorthMessaging]JMS链接发现异常：", e);
+                    log.error("[NorthMessaging]JMS链接发现异常：", e);
                     break;
                 } catch (JMSException e) {
-                    log.error("[NorthMessaging]忽略消息：{}", payloadStr);
+                    log.error("[NorthMessaging]JMS发送异常，忽略消息：{}", payloadStr, e);
                     sleepAMoment(SLEEP_SHORT_TIME);
-                    break;
+                    continue;
                 }
             }
 
             if (!reconnectClient) {
-                // 保证消息最少一次送达，当事务提交后才清除元素
+                // 保证消息最少一次送达，当事务提交后才标注元素可清除
                 try {
                     jmsClient.commitTransaction();
                     return idx;
@@ -209,6 +216,7 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
             // JMS链接异常：重新建立链接
             log.warn("[NorthMessaging]JMS链接发现异常，关闭链接");
             jmsClient.close();
+            jmsClient = null;
             sleepAMoment(SLEEP_SHORT_TIME);
             return srcIdx;
         }
@@ -225,7 +233,10 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
         public void reload() {
             if (this.disposable != null) {
                 this.disposable.dispose();
+
+                //TODO 等待异步线程退出
             }
+
             start();
         }
 

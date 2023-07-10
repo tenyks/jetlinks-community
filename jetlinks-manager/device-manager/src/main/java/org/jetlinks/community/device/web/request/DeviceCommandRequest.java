@@ -1,4 +1,4 @@
-package org.jetlinks.community.north.manager.web.request;
+package org.jetlinks.community.device.web.request;
 
 
 import lombok.*;
@@ -15,11 +15,6 @@ import java.util.Map;
 @Getter
 @Setter
 public class DeviceCommandRequest {
-
-    /**
-     * 产品标识
-     */
-    private String      productId;
 
     /**
      * 设备标识
