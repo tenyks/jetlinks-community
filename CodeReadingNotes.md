@@ -10,15 +10,20 @@
 * SubscriptionProvider
 * |-> RuleEngineSubscriptionProvider
 * |-> NotificationsPublishProvider
+* |-> DeviceStatusMeasurementProvider
+* |-> DeviceMessageMeasurementProvider
+* |-> DeviceMessageSubscriptionProvider
+* org.jetlinks.community.gateway.annotation.Subscribe：标注
+* org.jetlinks.community.gateway.spring.MessageListener
 
 ## 核心概念映射的类
 * SubscribeRequest
+* org.jetlinks.community.gateway.Subscription
 
+## 框架
+* org.jetlinks.core.utils.TopicUtils
+* org.jetlinks.community.gateway.external.DefaultMessagingManager
 
-### 框架
-
-
-### 执行器
 
 
 ### 数据流
