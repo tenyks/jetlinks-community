@@ -110,9 +110,30 @@ public class NorthMessage implements Serializable {
             return fromMessage((DeviceOfflineMessage) msg);
         } else if (msg instanceof DirectDeviceMessage) {
             return fromMessage((DirectDeviceMessage) msg);
+        } else if (msg instanceof FunctionInvokeMessageReply) {
+            return fromMessage((FunctionInvokeMessageReply) msg);
+        }
+
+        if (msg instanceof DeviceMessage) {
+            return fromMessage((DeviceMessage) msg);
         }
 
         return null;
+    }
+
+    public static NorthMessage fromMessage(DeviceMessage msg) {
+        NorthMessage rstMsg = new NorthMessage();
+
+        rstMsg.setUuid(msg.getMessageId());
+        rstMsg.setMessageId(msg.getMessageId());
+        rstMsg.setDeviceId(msg.getDeviceId());
+        rstMsg.setThingId(msg.getThingId());
+        rstMsg.setMessageType(msg.getMessageType().name());
+        rstMsg.setTimestamp(msg.getTimestamp());
+
+        rstMsg.setRawMessage(JSONObject.toJSONString(msg));
+
+        return rstMsg;
     }
 
     public static NorthMessage fromMessage(ReportPropertyMessage msg) {

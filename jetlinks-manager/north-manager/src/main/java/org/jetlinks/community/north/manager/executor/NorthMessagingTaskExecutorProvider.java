@@ -41,7 +41,6 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
 
     private static final int    JMS_COMMIT_BATCH_SIZE = 20;
     private static final List<String> SUBSCRIBED_TOPICS = new ArrayList<>();
-    private static final String DST_NORTH_TOPIC = "/iot/northMessage";
     private static final long   SLEEP_SHORT_TIME = 1000;
     private static final long   SLEEP_LONG_TIME = 30000;
 
@@ -55,17 +54,23 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
         SUBSCRIBED_TOPICS.add("/message/unknown");
         SUBSCRIBED_TOPICS.add("/message/log");
         SUBSCRIBED_TOPICS.add("/message/direct");
-        SUBSCRIBED_TOPICS.add("/online");
-        SUBSCRIBED_TOPICS.add("/offline");
+        SUBSCRIBED_TOPICS.add("/device/*/*/online");
+        SUBSCRIBED_TOPICS.add("/device/*/*/offline");
     }
 
     private final EventBus  eventBus;
 
     private final String    jmsBrokerUrl;
 
-    public NorthMessagingTaskExecutorProvider(EventBus eventBus, @Value("${system.jms.jmsBrokerUrl:}") String jmsBrokerUrl) {
+    private final String    jmsQueueUri;
+
+    public NorthMessagingTaskExecutorProvider(EventBus eventBus,
+                                              @Value("${system.config.north.jmsBrokerUrl:}") String jmsBrokerUrl,
+                                              @Value("${system.config.north.jmsQueueUri:}") String jmsQueueUri
+    ) {
         this.eventBus = eventBus;
         this.jmsBrokerUrl = jmsBrokerUrl;
+        this.jmsQueueUri = StringUtils.isNotBlank(jmsQueueUri) ? jmsQueueUri : "/iot/north/message";
     }
 
     @Override
@@ -77,10 +82,10 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
     public Mono<TaskExecutor> createTask(ExecutionContext context) {
         if (StringUtils.isBlank(jmsBrokerUrl)) {
             log.warn("[北向推送]没有配置北向消息JMS Broker地址， 不推送北向消息");
-            return null;
+            return Mono.empty();
         }
 
-        return null;
+        return Mono.just(new NorthMessagingTaskExecutor(context));
     }
 
     class NorthMessagingTaskExecutor extends AbstractTaskExecutor implements Runnable, Disposable {
@@ -90,9 +95,9 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
         /**
          * 待发往北向对接JMS队列的消息
          */
-        private BlockingQueue<Message> waitToPushQueue;
+        private final BlockingQueue<Message> waitToPushQueue;
 
-        private AtomicBoolean   stop = new AtomicBoolean(false);
+        private final AtomicBoolean   stop = new AtomicBoolean(false);
 
         private Thread          attachedThread = null;
 
@@ -188,10 +193,19 @@ public class NorthMessagingTaskExecutorProvider implements TaskExecutorProvider 
                 Message msg = msgList.get(idx);
 
                 NorthMessage northMsg = NorthMessage.fromMessage(msg);
+                if (northMsg == null) {
+                    if (log.isWarnEnabled()) {
+                        log.warn("[NorthMessaging]忽略消息：{}", msg.toJson());
+                    }
+                    continue;
+                }
+
                 String payloadStr = JSONObject.toJSONString(northMsg);
                 try {
-                    jmsClient.send(DST_NORTH_TOPIC, payloadStr);
-                    log.debug("[NorthMessaging]JMS消息已发送：{}", payloadStr);
+                    jmsClient.send(jmsQueueUri, payloadStr);
+                    if (log.isInfoEnabled()) {
+                        log.info("[NorthMessaging]JMS消息已发送：{}", payloadStr);
+                    }
                 } catch (ConnectionClosedException | AlreadyClosedException e) {
                     reconnectClient = true;
                     log.error("[NorthMessaging]JMS链接发现异常：", e);
