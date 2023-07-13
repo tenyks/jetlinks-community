@@ -19,7 +19,6 @@ public class DefaultMessagingManager implements MessagingManager, BeanPostProces
 
     @Override
     public Flux<Message> subscribe(SubscribeRequest request) {
-
         return Flux.defer(() -> {
             for (Map.Entry<String, SubscriptionProvider> entry : subProvider.entrySet()) {
                 if (matcher.match(entry.getKey(), request.getTopic())) {

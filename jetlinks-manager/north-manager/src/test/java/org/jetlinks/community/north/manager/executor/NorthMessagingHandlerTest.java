@@ -8,20 +8,17 @@ import org.jetlinks.core.message.function.FunctionInvokeMessageReply;
 import org.jetlinks.core.message.property.ReadPropertyMessageReply;
 import org.jetlinks.core.message.property.ReportPropertyMessage;
 import org.jetlinks.core.message.property.WritePropertyMessageReply;
-import org.jetlinks.rule.engine.api.task.ExecutionContext;
-import org.jetlinks.rule.engine.api.task.TaskExecutor;
 import org.jetlinks.supports.event.BrokerEventBus;
 import org.junit.Before;
 import org.junit.Test;
-import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
-public class NorthMessagingTaskExecutorProviderTest {
+public class NorthMessagingHandlerTest {
 
 
-    private NorthMessagingTaskExecutorProvider  provider;
+    private NorthMessagingHandler handler;
 
     private EventBus    eventBus;
 
@@ -30,15 +27,12 @@ public class NorthMessagingTaskExecutorProviderTest {
         String jmsUrl = "tcp://MyDevS1:61616";
 
         eventBus = new BrokerEventBus();
-        provider = new NorthMessagingTaskExecutorProvider(eventBus, jmsUrl, "/unitTest/north/message");
+        handler = new NorthMessagingHandler(jmsUrl, "/unitTest/north/message");
     }
 
     @Test
-    public void createTask() throws InterruptedException {
-        ExecutionContext ctx = new DummyExecutionContext();
-
-        Mono<TaskExecutor> task = provider.createTask(ctx);
-        task.doOnNext(TaskExecutor::start).subscribe();
+    public void createTask() throws Exception {
+        handler.afterPropertiesSet();
 
         Random rand = new Random(System.currentTimeMillis());
         for (int i = 0; i < 100; i++) {
@@ -50,7 +44,6 @@ public class NorthMessagingTaskExecutorProviderTest {
         }
 
         Thread.sleep(60000);
-        ctx.shutdown("CLOSE", "CLOSE");
     }
 
     private Tuple<String, Message> createTestMessage(int flag) {

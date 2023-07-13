@@ -91,7 +91,7 @@ public class NorthMessage implements Serializable {
      */
     private String      rawMessage;
 
-    public static NorthMessage fromMessage(Message msg) {
+    public static NorthMessage fromMessage(DeviceMessage msg) {
         if (msg instanceof ReportPropertyMessage) {
             return fromMessage((ReportPropertyMessage) msg);
         } else if (msg instanceof ReadPropertyMessageReply) {
@@ -114,14 +114,10 @@ public class NorthMessage implements Serializable {
             return fromMessage((FunctionInvokeMessageReply) msg);
         }
 
-        if (msg instanceof DeviceMessage) {
-            return fromMessage((DeviceMessage) msg);
-        }
-
-        return null;
+        return _buildDefault(msg);
     }
 
-    public static NorthMessage fromMessage(DeviceMessage msg) {
+    private static NorthMessage _buildDefault(DeviceMessage msg) {
         NorthMessage rstMsg = new NorthMessage();
 
         rstMsg.setUuid(msg.getMessageId());

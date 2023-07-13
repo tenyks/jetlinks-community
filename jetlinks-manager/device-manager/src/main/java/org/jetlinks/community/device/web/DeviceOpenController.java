@@ -39,10 +39,8 @@ public class DeviceOpenController {
      */
     @PostMapping("/sendCommand")
     @SaveAction @Operation(summary = "下发指令")
-    public Flux<String> sendServiceContextCommand(@RequestBody DeviceCommandRequest cmdReq) {
-        service.invokeFunction(cmdReq.getDeviceId(), cmdReq.getFunctionId(), cmdReq.getFunctionParams());
-
-        return null;
+    public Flux<?> sendServiceContextCommand(@RequestBody DeviceCommandRequest cmdReq) {
+        return service.invokeFunction(cmdReq.getDeviceId(), cmdReq.getFunctionId(), cmdReq.getFunctionParams());
     }
 
 }

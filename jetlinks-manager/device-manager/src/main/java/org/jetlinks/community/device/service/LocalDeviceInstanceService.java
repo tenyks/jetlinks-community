@@ -633,8 +633,6 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
             )
             .flatMapMany(FunctionInvokeMessageSender::send)
             .flatMap(convertReply ? mapReply(FunctionInvokeMessageReply::getOutput) : Mono::just);
-
-
     }
 
     //获取设备所有属性
