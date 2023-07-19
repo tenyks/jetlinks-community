@@ -163,6 +163,9 @@ micrometer:
         step: 30s
 system:
   config:
+    north:
+      jmsBrokerUrl: tcp://localhost:61616
+      jmsQueueUri: /iot/north/message
     scopes:
       - id: front
         name: 前端配置
@@ -221,3 +224,4 @@ springdoc:
 network:
   resources:
     - 5900-5910
+    - 5680-5689

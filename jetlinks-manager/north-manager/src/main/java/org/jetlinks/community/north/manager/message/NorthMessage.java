@@ -35,8 +35,8 @@ public class NorthMessage implements Serializable {
     private String      deviceName;
 
     /**
-     * DEVICE_OFFLINE = 离线
-     * DEVICE_ONLINE = 上线
+     * DEVICE_OFFLINE = 设备离线事件
+     * DEVICE_ONLINE = 设备上线事件
      * INVOKE_FUNCTION_REPLY = 调用功能/下发指令回复
      * REPORT_PROPERTY = 属性上报
      */

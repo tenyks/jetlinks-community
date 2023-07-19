@@ -143,10 +143,10 @@ logging:
     org.jetlinks.community.network: warn
     io.vertx.mqtt.impl: warn
     org.jetlinks.supports.scalecube.rpc: warn
-    "org.jetlinks.community.buffer": debug
+    org.jetlinks.community.buffer: debug
     org.elasticsearch: error
     org.elasticsearch.deprecation: off
-    "io.vertx.core.impl.ContextImpl": off
+    io.vertx.core.impl.ContextImpl: off
   config: classpath:logback-spring.xml
 vertx:
   max-event-loop-execute-time-unit: seconds
