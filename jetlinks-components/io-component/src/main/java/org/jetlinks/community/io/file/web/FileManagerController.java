@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
-@RequestMapping("/file")
+@RequestMapping(path = {"/file", "/api/file"})
 @AllArgsConstructor
 public class FileManagerController {
 

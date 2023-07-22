@@ -59,6 +59,7 @@
         <logger name="io.scalecube" level="INFO" />
         <logger name="io.r2dbc" level="INFO" />
         <logger name="dev.miku" level="INFO" />
+        <logger name="org.hswebframework.ezorm" level="INFO" />
         <logger name="org.apache.commons.beanutils" level="INFO" />
 
         <root level="DEBUG">
