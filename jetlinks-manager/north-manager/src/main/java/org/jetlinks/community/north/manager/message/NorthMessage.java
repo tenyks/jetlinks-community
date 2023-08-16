@@ -2,6 +2,7 @@ package org.jetlinks.community.north.manager.message;
 
 import com.alibaba.fastjson.JSONObject;
 import org.jetlinks.core.message.*;
+import org.jetlinks.core.message.event.EventMessage;
 import org.jetlinks.core.message.function.FunctionInvokeMessageReply;
 import org.jetlinks.core.message.property.ReadPropertyMessageReply;
 import org.jetlinks.core.message.property.ReportPropertyMessage;
@@ -35,10 +36,12 @@ public class NorthMessage implements Serializable {
     private String      deviceName;
 
     /**
+     * 消息类型
      * DEVICE_OFFLINE = 设备离线事件
      * DEVICE_ONLINE = 设备上线事件
      * INVOKE_FUNCTION_REPLY = 调用功能/下发指令回复
      * REPORT_PROPERTY = 属性上报
+     * REPORT_EVENT = 事件上报
      */
     private String      messageType;
 
@@ -48,7 +51,7 @@ public class NorthMessage implements Serializable {
     private String      messageId;
 
     /**
-     * 发生时间
+     * 发生时间戳，单位：毫秒
      */
     private Long        timestamp;
 
@@ -64,7 +67,7 @@ public class NorthMessage implements Serializable {
     private Boolean     success;
 
     /**
-     * 指令执行结果：类型为相应服务/功能的输出参数
+     * 指令执行结果：类型为相应服务/功能/的输出参数或物模型事件的参数
      * 参考：产品物模型
      */
     private Object      output;
@@ -79,6 +82,12 @@ public class NorthMessage implements Serializable {
      * 参考：产品物模型
      */
     private String      functionId;
+
+    /**
+     * 相关的物模型事件标识
+     * 参考：产品物模型
+     */
+    private String      eventId;
 
     /**
      * 上报的属性，编码与类型与物模型定义一致
@@ -112,6 +121,8 @@ public class NorthMessage implements Serializable {
             return fromMessage((DirectDeviceMessage) msg);
         } else if (msg instanceof FunctionInvokeMessageReply) {
             return fromMessage((FunctionInvokeMessageReply) msg);
+        } else if (msg instanceof EventMessage) {
+            return fromMessage((EventMessage) msg);
         }
 
         return _buildDefault(msg);
@@ -213,6 +224,23 @@ public class NorthMessage implements Serializable {
         rstMsg.setMessageType("INVOKE_FUNCTION_REPLY");
         rstMsg.setOutput(msg.getOutput());
         rstMsg.setSuccess(msg.isSuccess());
+        rstMsg.setTimestamp(msg.getTimestamp());
+
+        rstMsg.setRawMessage(JSONObject.toJSONString(msg));
+
+        return rstMsg;
+    }
+
+    public static NorthMessage fromMessage(EventMessage msg) {
+        NorthMessage rstMsg = new NorthMessage();
+
+        rstMsg.setUuid(msg.getMessageId());
+        rstMsg.setMessageId(msg.getMessageId());
+        rstMsg.setDeviceId(msg.getDeviceId());
+        rstMsg.setThingId(msg.getThingId());
+        rstMsg.setEventId(msg.getEvent());
+        rstMsg.setMessageType("REPORT_EVENT");
+        rstMsg.setOutput(msg.getData());
         rstMsg.setTimestamp(msg.getTimestamp());
 
         rstMsg.setRawMessage(JSONObject.toJSONString(msg));
@@ -332,6 +360,14 @@ public class NorthMessage implements Serializable {
         this.rawMessage = rawMessage;
     }
 
+    public String getEventId() {
+        return eventId;
+    }
+
+    public void setEventId(String eventId) {
+        this.eventId = eventId;
+    }
+
     @Override
     public String toString() {
         return "NorthMessage{" +
@@ -347,6 +383,7 @@ public class NorthMessage implements Serializable {
             ", output=" + output +
             ", message='" + message + '\'' +
             ", functionId='" + functionId + '\'' +
+            ", eventId='" + eventId + '\'' +
             ", properties=" + properties +
             ", rawMessage='" + rawMessage + '\'' +
             '}';

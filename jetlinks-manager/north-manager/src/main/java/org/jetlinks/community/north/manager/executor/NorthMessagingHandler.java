@@ -77,7 +77,8 @@ public class NorthMessagingHandler implements InitializingBean, DisposableBean {
         "/device/*/*/register", "/device/*/*/unregister",
         "/device/*/*/online", "/device/*/*/offline",
         "/device/*/*/message/property/report",
-        "/device/*/*/message/property/read,write/reply"
+        "/device/*/*/message/property/read,write/reply",
+        "/device/*/*/event"
     })
     @Transactional(propagation = Propagation.NEVER)
     public Mono<Void> handleNorthMessage(DeviceMessage message) {
