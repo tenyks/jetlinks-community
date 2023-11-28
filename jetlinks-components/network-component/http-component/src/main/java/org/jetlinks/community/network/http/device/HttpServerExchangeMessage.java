@@ -21,7 +21,6 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 public class HttpServerExchangeMessage implements HttpExchangeMessage {
 
-
     AtomicReference<Boolean> responded = new AtomicReference<>(false);
 
     MultiPart multiPart;
