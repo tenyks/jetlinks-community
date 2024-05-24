@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * 北向消息推送任务
  */
-@Component
+@Component @ConditionalOnProperty(value = "system.config.north.enabled", havingValue = "true", matchIfMissing = false)
 public class NorthMessagingHandler implements InitializingBean, DisposableBean {
 
     private static final Logger log = LoggerFactory.getLogger(NorthMessagingHandler.class);
@@ -48,8 +49,7 @@ public class NorthMessagingHandler implements InitializingBean, DisposableBean {
     private final NorthMessagingTaskExecutor    executor;
 
     public NorthMessagingHandler(@Value("${system.config.north.jmsBrokerUrl:}") String jmsBrokerUrl,
-                                 @Value("${system.config.north.jmsQueueUri:}") String jmsQueueUri
-    ) {
+                                 @Value("${system.config.north.jmsQueueUri:}") String jmsQueueUri) {
         this.jmsBrokerUrl = jmsBrokerUrl;
         this.jmsQueueUri = StringUtils.isNotBlank(jmsQueueUri) ? jmsQueueUri : "/iot/north/message";
 

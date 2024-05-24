@@ -164,6 +164,7 @@ micrometer:
 system:
   config:
     north:
+      enabled: false
       jmsBrokerUrl: tcp://MyDevS1:61616
       jmsQueueUri: /iot/north/message
     scopes:
