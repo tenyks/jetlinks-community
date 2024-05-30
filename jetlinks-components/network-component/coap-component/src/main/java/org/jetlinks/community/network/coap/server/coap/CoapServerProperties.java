@@ -22,11 +22,11 @@ import java.util.Map;
 @AllArgsConstructor
 public class CoapServerProperties extends AbstractServerNetworkConfig implements ValueObject {
 
-    private PayloadType payloadType;
+    private PayloadType             payloadType;
 
-    private PayloadParserType parserType;
+    private PayloadParserType       parserType;
 
-    private Map<String, Object> parserConfiguration = new HashMap<>();
+    private Map<String, Object>     parserConfiguration = new HashMap<>();
 
     private boolean tcpKeepAlive = false;
 
@@ -44,11 +44,11 @@ public class CoapServerProperties extends AbstractServerNetworkConfig implements
 
     @Override
     public NetworkTransport getTransport() {
-        return NetworkTransport.TCP;
+        return NetworkTransport.UDP;
     }
 
     @Override
     public String getSchema() {
-        return "tcp";
+        return "coap";
     }
 }

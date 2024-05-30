@@ -31,7 +31,6 @@ class CoapDeviceSession implements DeviceSession {
     @Setter
     private CoapExchange    exchange;
 
-
     private long lastPingTime = System.currentTimeMillis();
 
     //默认永不超时
@@ -42,7 +41,8 @@ class CoapDeviceSession implements DeviceSession {
         this.address = address;
     }
 
-    public CoapDeviceSession(DeviceOperator deviceOperator, CoapClient client, Transport transport, DeviceGatewayMonitor monitor) {
+    public CoapDeviceSession(DeviceOperator deviceOperator, CoapClient client, Transport transport,
+                             DeviceGatewayMonitor monitor) {
         this.operator = deviceOperator;
         this.address = client.getRemoteAddress();
     }

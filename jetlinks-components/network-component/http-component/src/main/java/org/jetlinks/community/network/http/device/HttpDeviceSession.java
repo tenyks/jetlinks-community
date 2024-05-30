@@ -70,7 +70,7 @@ class HttpDeviceSession implements DeviceSession {
 
     @Override
     public Mono<Boolean> send(EncodedMessage encodedMessage) {
-        if(websocket==null){
+        if (websocket == null) {
             return Reactors.ALWAYS_FALSE;
         }
         if (encodedMessage instanceof WebSocketMessage) {
@@ -117,6 +117,6 @@ class HttpDeviceSession implements DeviceSession {
 
     @Override
     public void onClose(Runnable call) {
-
+        call.run();
     }
 }

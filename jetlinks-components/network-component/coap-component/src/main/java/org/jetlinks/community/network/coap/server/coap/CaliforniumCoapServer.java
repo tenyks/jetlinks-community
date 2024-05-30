@@ -54,7 +54,7 @@ public class CaliforniumCoapServer implements CoapServer {
         try {
             runnable.run();
         } catch (Exception e) {
-            log.warn("close tcp server error", e);
+            log.warn("close coap server error", e);
         }
     }
 
@@ -73,15 +73,15 @@ public class CaliforniumCoapServer implements CoapServer {
         }
         this.coapServers = servers;
 
-        for (NetServer tcpServer : this.coapServers) {
-            tcpServer.connectHandler(this::acceptTcpConnection);
+        for (NetServer coapServer : this.coapServers) {
+            coapServer.connectHandler(this::acceptCoapConnection);
         }
 
     }
 
-    protected void acceptTcpConnection(NetSocket socket) {
+    protected void acceptCoapConnection(NetSocket socket) {
         if (sink.currentSubscriberCount() == 0) {
-            log.warn("not handler for tcp client[{}]", socket.remoteAddress());
+            log.warn("not handler for coap client[{}]", socket.remoteAddress());
             socket.close();
             return;
         }
@@ -124,7 +124,7 @@ public class CaliforniumCoapServer implements CoapServer {
     @Override
     public void shutdown() {
         if (null != coapServers) {
-            log.debug("close tcp server :[{}]", id);
+            log.debug("close coap server :[{}]", id);
             for (NetServer server : coapServers) {
                 execute(server::close);
             }

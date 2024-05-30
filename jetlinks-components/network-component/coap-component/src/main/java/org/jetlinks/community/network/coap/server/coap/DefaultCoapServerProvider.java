@@ -56,9 +56,8 @@ public class DefaultCoapServerProvider implements NetworkProvider<CoapServerProp
     @Nonnull
     @Override
     public Mono<Network> createNetwork(@Nonnull CoapServerProperties properties) {
-
-        CaliforniumCoapServer tcpServer = new CaliforniumCoapServer(properties.getId());
-        return initTcpServer(tcpServer, properties);
+        CaliforniumCoapServer coapServer = new CaliforniumCoapServer(properties.getId());
+        return initTcpServer(coapServer, properties);
     }
 
     private Mono<Network> initTcpServer(CaliforniumCoapServer coapServer, CoapServerProperties properties) {
@@ -131,7 +130,7 @@ public class DefaultCoapServerProvider implements NetworkProvider<CoapServerProp
     private Mono<NetServerOptions> convert(CoapServerProperties properties) {
         NetServerOptions options = new NetServerOptions();
         options.setPort(properties.getPort());
-        options.setTcpKeepAlive(true);
+//        options.setTcpKeepAlive(true);
 
         if (properties.isSecure()) {
             options.setSsl(true);
@@ -142,6 +141,7 @@ public class DefaultCoapServerProvider implements NetworkProvider<CoapServerProp
                 .doOnNext(options::setTrustOptions)
                 .thenReturn(options);
         }
+
         return Mono.just(options);
     }
 }
