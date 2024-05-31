@@ -22,11 +22,11 @@ import reactor.core.publisher.FluxSink;
  * Lwm2m协议订阅设备数据监听器
  */
 public class Lwm2mObservationListener implements ObservationListener {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(Lwm2mObservationListener.class);
 
-    private Flux<LwM2MUplinkMessage>      flux;
+    private final Flux<LwM2MUplinkMessage>      flux;
 
-    private FluxSink<LwM2MUplinkMessage>  fluxSink;
+    private FluxSink<LwM2MUplinkMessage>        fluxSink;
 
     public Lwm2mObservationListener() {
         flux = Flux.create(sink -> this.fluxSink = sink);
@@ -57,7 +57,7 @@ public class Lwm2mObservationListener implements ObservationListener {
         }
 
         if (logger.isDebugEnabled()) {
-
+            logger.debug("[LwM2M]ObserveResponse: ep={}, response={}", ep, response);
         }
 
         Object contentObj = ((LwM2mSingleResource) contentNode).getValue();

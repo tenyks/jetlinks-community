@@ -181,7 +181,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
             return Mono.empty();
         }
         if (log.isDebugEnabled()) {
-            log.debug("[LwM2M]接收到消息：{}");
+            log.debug("[LwM2M]接收到消息：{}", message);
         }
 
         return sessionManager
@@ -194,7 +194,9 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
                         .getProtocol()
                         .flatMap(protocol -> protocol.getMessageCodec(getTransport()))
                         /*解码*/
-                        .flatMapMany(codec -> codec.decode(FromDeviceMessageContext.of(session, message, deviceRegistry)))
+                        .flatMapMany(codec -> {
+                            return codec.decode(FromDeviceMessageContext.of(session, message, deviceRegistry));
+                        })
                         .cast(DeviceMessage.class)
                         .flatMap(msg -> {
                             //回填deviceId,有的场景协议包不能或者没有解析出deviceId,则直接使用连接对应的设备id进行填充.
