@@ -56,6 +56,10 @@ public class Lwm2mObservationListener implements ObservationListener {
            return ;
         }
 
+        if (logger.isDebugEnabled()) {
+
+        }
+
         Object contentObj = ((LwM2mSingleResource) contentNode).getValue();
 
         SimpleLwM2MUplinkMessage message = new SimpleLwM2MUplinkMessage();

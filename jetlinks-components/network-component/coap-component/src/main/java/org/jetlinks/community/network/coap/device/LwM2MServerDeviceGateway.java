@@ -50,25 +50,25 @@ import java.util.function.Function;
 public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
     private static final AttributeKey<String> ENDPOINT = AttributeKey.stringKey("endpoint");
 
-    final LwM2MServer               server;
+    final LwM2MServer                   server;
 
     /**
      * 定制协议
      */
-    private Mono<ProtocolSupport>   custProtocol;
+    private Mono<ProtocolSupport>       custProtocol;
 
-    private final DeviceRegistry    deviceRegistry;
+    private final DeviceRegistry        deviceRegistry;
 
     /**
      * 设备会话管理器
      */
-    private final DeviceSessionManager sessionManager;
+    private final DeviceSessionManager  sessionManager;
 
     private final LongAdder counter = new LongAdder();
 
-    private Disposable disposable;
+    private Disposable                  disposable;
 
-    private final DeviceGatewayHelper helper;
+    private final DeviceGatewayHelper   helper;
 
 
     public LwM2MServerDeviceGateway(String id,
@@ -180,6 +180,9 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
             log.warn("无会话信息:regId={}, mid={}", message.getRegistrationId(), message.getMessageId());
             return Mono.empty();
         }
+        if (log.isDebugEnabled()) {
+            log.debug("[LwM2M]接收到消息：{}");
+        }
 
         return sessionManager
             .getSession(deviceId)
@@ -229,7 +232,7 @@ public class LwM2MServerDeviceGateway extends AbstractDeviceGateway {
 
             },
             () -> {
-                log.warn("无法从MQTT[{}]消息中获取设备信息:{}", session.getDeviceId(), message);
+                log.warn("无法从LwM2M[{}]消息中获取设备信息:{}", session.getDeviceId(), message);
             })
             .thenReturn(message);
     }

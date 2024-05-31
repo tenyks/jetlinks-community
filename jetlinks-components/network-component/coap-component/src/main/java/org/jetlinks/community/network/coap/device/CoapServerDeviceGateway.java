@@ -143,7 +143,7 @@ class CoapServerDeviceGateway extends AbstractDeviceGateway implements DeviceGat
                 .then(
                     client.subscribe()
                         .filter(tcp -> started.get())
-                        .flatMap(this::handleTcpMessage)
+                        .flatMap(this::handleCoapMessage)
                         .onErrorResume((err) -> {
                             log.error(err.getMessage(), err);
                             client.shutdown();
@@ -154,7 +154,7 @@ class CoapServerDeviceGateway extends AbstractDeviceGateway implements DeviceGat
                 .doOnCancel(client::shutdown);
         }
 
-        Mono<Void> handleTcpMessage(CoapMessage message) {
+        Mono<Void> handleCoapMessage(CoapMessage message) {
             long time = System.nanoTime();
             // ProtocolSupport -> MessageCodec >> MessageCodec.decode(message) -> DeviceMessage
             return getProtocol()
