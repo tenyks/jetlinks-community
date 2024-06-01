@@ -7,9 +7,11 @@ import org.eclipse.leshan.core.node.LwM2mNode;
 import org.eclipse.leshan.core.node.LwM2mObjectInstance;
 import org.eclipse.leshan.core.node.LwM2mSingleResource;
 import org.eclipse.leshan.core.observation.Observation;
+import org.eclipse.leshan.core.request.ContentFormat;
 import org.eclipse.leshan.core.response.ObserveResponse;
 import org.eclipse.leshan.server.observation.ObservationListener;
 import org.eclipse.leshan.server.registration.Registration;
+import org.jetlinks.core.message.codec.MessagePayloadType;
 import org.jetlinks.core.message.codec.lwm2m.LwM2MResource;
 import org.jetlinks.core.message.codec.lwm2m.LwM2MUplinkMessage;
 import org.jetlinks.core.message.codec.lwm2m.SimpleLwM2MUplinkMessage;
@@ -65,10 +67,21 @@ public class Lwm2mObservationListener implements ObservationListener {
         SimpleLwM2MUplinkMessage message = new SimpleLwM2MUplinkMessage();
 
         Response coapRsp = (Response) response.getCoapResponse();
+        int contentFormat = coapRsp.getOptions().getContentFormat();
 
         //TODO 根据observation.path确定是哪种资源
         message.setPath(response.getObservation().getPath().toString());
-//        message.setPayloadType(response.get);
+        if (ContentFormat.OPAQUE.getCode() == contentFormat) {
+            message.setPayloadType(MessagePayloadType.BINARY);
+        } else if (ContentFormat.TLV.getCode() == contentFormat) {
+            message.setPayloadType(MessagePayloadType.TLV);
+        } else if(ContentFormat.JSON.getCode() == contentFormat){
+            message.setPayloadType(MessagePayloadType.JSON);
+        } else if (ContentFormat.TEXT.getCode() == contentFormat) {
+            message.setPayloadType(MessagePayloadType.STRING);
+        } else {
+            message.setPayloadType(MessagePayloadType.UNKNOWN);
+        }
         message.setPayload(Unpooled.wrappedBuffer((byte[]) contentObj));
         message.setMessageId(coapRsp.getMID());
         message.setRegistrationId(registration.getId());
