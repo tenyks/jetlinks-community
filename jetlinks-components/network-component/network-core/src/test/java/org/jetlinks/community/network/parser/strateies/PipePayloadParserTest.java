@@ -2,6 +2,7 @@ package org.jetlinks.community.network.parser.strateies;
 
 import io.netty.buffer.Unpooled;
 import io.vertx.core.buffer.Buffer;
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -12,6 +13,12 @@ import java.time.Duration;
 
 class PipePayloadParserTest {
 
+    public static void main(String[] args) {
+        byte[] src = new byte[]{-6, 17, 0, 36, 0, 16, 0, 14, 0, 12, 0, 20, 34, 61, 0, 2, 0, 3};
+
+        System.out.println(Hex.toHexString(src));
+
+    }
 
     @Test
     void testSplicingUnpack() {
@@ -85,8 +92,6 @@ class PipePayloadParserTest {
                 .as(StepVerifier::create)
                 .expectNext("hello", "hello")
                 .verifyComplete();
-
-
     }
 
 
