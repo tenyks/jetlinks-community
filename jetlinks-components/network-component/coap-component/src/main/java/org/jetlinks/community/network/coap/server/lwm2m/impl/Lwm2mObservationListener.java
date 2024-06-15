@@ -58,8 +58,8 @@ public class Lwm2mObservationListener implements ObservationListener {
            return ;
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("[LwM2M]ObserveResponse: ep={}, response={}", ep, response);
+        if (logger.isInfoEnabled()) {
+            logger.info("[LwM2M]ObserveResponse: ep={}, response={}", ep, response);
         }
 
         Object contentObj = ((LwM2mSingleResource) contentNode).getValue();
