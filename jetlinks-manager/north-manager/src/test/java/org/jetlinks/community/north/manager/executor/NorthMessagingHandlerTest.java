@@ -27,7 +27,7 @@ public class NorthMessagingHandlerTest {
         String jmsUrl = "tcp://MyDevS1:61616";
 
         eventBus = new BrokerEventBus();
-        handler = new NorthMessagingHandler(jmsUrl, "/unitTest/north/message");
+        handler = new NorthMessagingHandler(jmsUrl, "/unitTest/north/message", null, null);
     }
 
     @Test

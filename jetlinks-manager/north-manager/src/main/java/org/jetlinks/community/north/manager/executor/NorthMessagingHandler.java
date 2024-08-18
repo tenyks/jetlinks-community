@@ -46,12 +46,20 @@ public class NorthMessagingHandler implements InitializingBean, DisposableBean {
 
     private final String    jmsQueueUri;
 
+    private final String    jmsUsername;
+
+    private final String    jmsPassword;
+
     private final NorthMessagingTaskExecutor    executor;
 
     public NorthMessagingHandler(@Value("${system.config.north.jmsBrokerUrl:}") String jmsBrokerUrl,
-                                 @Value("${system.config.north.jmsQueueUri:}") String jmsQueueUri) {
+                                 @Value("${system.config.north.jmsQueueUri:}") String jmsQueueUri,
+                                 @Value("${system.config.north.jmsUsername:}") String jmsUsername,
+                                 @Value("${system.config.north.jmsPassword:}") String jmsPassword) {
         this.jmsBrokerUrl = jmsBrokerUrl;
         this.jmsQueueUri = StringUtils.isNotBlank(jmsQueueUri) ? jmsQueueUri : "/iot/north/message";
+        this.jmsUsername = StringUtils.isNotBlank(jmsUsername) ? jmsUsername.trim() : null;
+        this.jmsPassword = StringUtils.isNotBlank(jmsPassword) ? jmsPassword.trim() : null;
 
         this.executor = new NorthMessagingTaskExecutor();
     }
@@ -181,7 +189,11 @@ public class NorthMessagingHandler implements InitializingBean, DisposableBean {
 
             if (jmsClient == null) {
                 try {
-                    jmsClient = new ActiveMQClientImpl("iot-north-messaging", jmsBrokerUrl);
+                    if (jmsUsername == null) {
+                        jmsClient = new ActiveMQClientImpl("iot-north-messaging", jmsBrokerUrl);
+                    } else {
+                        jmsClient = new ActiveMQClientImpl("iot-north-messaging", jmsBrokerUrl, jmsUsername, jmsPassword);
+                    }
                     log.info("[NorthMessaging]建立JMS链接成功：{}", jmsClient);
                 } catch (JMSException e) {
                     log.error("[NorthMessaging]JMS建立链接失败：url={}，请检查链接配置或JMS服务器", jmsBrokerUrl, e);
