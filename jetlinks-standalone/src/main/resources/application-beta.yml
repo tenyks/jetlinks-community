@@ -166,6 +166,8 @@ system:
     north:
       jmsBrokerUrl: tcp://localhost:61616
       jmsQueueUri: /iot/north/message
+      jmsUsername: iotapp-beta
+      jmsPassword: 5O4HNNPg166sJc1Kw59K
     scopes:
       - id: front
         name: 前端配置
