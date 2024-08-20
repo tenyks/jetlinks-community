@@ -164,6 +164,7 @@ micrometer:
 system:
   config:
     north:
+      enabled: true
       jmsBrokerUrl: tcp://localhost:61616
       jmsQueueUri: /iot/north/message
       jmsUsername: iotapp-beta
